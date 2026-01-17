@@ -16,7 +16,11 @@ use Recharge\Support\Paginator;
  * billing attempts for subscriptions and can be processed, skipped, refunded,
  * and more.
  *
+ * Note: Some endpoints (e.g., addFreeGift, removeFreeGift) are only available
+ * in API version 2021-11. The methods automatically handle version switching.
+ *
  * @see https://developer.rechargepayments.com/2021-11/charges
+ * @see https://developer.rechargepayments.com/2021-01/charges
  */
 class Charges extends AbstractResource
 {
@@ -190,18 +194,100 @@ class Charges extends AbstractResource
     /**
      * Capture a charge
      *
-     * Captures an authorized charge.
+     * Captures an authorized charge. This endpoint requires Pro merchant access.
      *
      * @param int $chargeId Charge ID
      * @return Charge Captured Charge DTO
      * @throws \Recharge\Exceptions\RechargeException
      * @see https://developer.rechargepayments.com/2021-11/charges#capture-a-charge
+     * @see https://developer.rechargepayments.com/2021-01/charges#capture-payment
      */
     public function capture(int $chargeId): Charge
     {
-        $response = $this->client->post($this->buildEndpoint("{$chargeId}/capture"));
+        $response = $this->client->post($this->buildEndpoint("{$chargeId}/capture_payment"));
 
         return Charge::fromArray($response['charge'] ?? []);
+    }
+
+    /**
+     * Change next charge date
+     *
+     * Updates the scheduled date for a charge.
+     *
+     * @param int $chargeId Charge ID
+     * @param array<string, mixed> $data Charge date data (scheduled_at, etc.)
+     * @return Charge Updated Charge DTO
+     * @throws \Recharge\Exceptions\RechargeException
+     * @see https://developer.rechargepayments.com/2021-11/charges#change-next-charge-date
+     * @see https://developer.rechargepayments.com/2021-01/charges#change-next-charge-date
+     */
+    public function changeNextChargeDate(int $chargeId, array $data): Charge
+    {
+        $response = $this->client->post($this->buildEndpoint("{$chargeId}/change_next_charge_date"), $data);
+
+        return Charge::fromArray($response['charge'] ?? []);
+    }
+
+    /**
+     * Add free gift to a charge
+     *
+     * Adds a free gift variant to a charge. Only available in API version 2021-11.
+     *
+     * @param int $chargeId Charge ID
+     * @param array<string, mixed> $data Free gift data (external_variant_id, etc.)
+     * @return Charge Updated Charge DTO
+     * @throws \Recharge\Exceptions\RechargeException
+     * @see https://developer.rechargepayments.com/2021-11/charges#add-free-gift
+     */
+    public function addFreeGift(int $chargeId, array $data): Charge
+    {
+        // Ensure we're using 2021-11 API version for this endpoint
+        $originalVersion = $this->client->getApiVersion();
+        if ($originalVersion !== ApiVersion::V2021_11) {
+            $this->client->setApiVersion(ApiVersion::V2021_11);
+        }
+
+        try {
+            $response = $this->client->post($this->buildEndpoint("{$chargeId}/add_free_gift"), $data);
+
+            return Charge::fromArray($response['charge'] ?? []);
+        } finally {
+            // Restore original API version
+            if ($originalVersion !== ApiVersion::V2021_11) {
+                $this->client->setApiVersion($originalVersion);
+            }
+        }
+    }
+
+    /**
+     * Remove free gift from a charge
+     *
+     * Removes a free gift variant from a charge. Only available in API version 2021-11.
+     *
+     * @param int $chargeId Charge ID
+     * @param array<string, mixed> $data Free gift data (external_variant_id, etc.)
+     * @return Charge Updated Charge DTO
+     * @throws \Recharge\Exceptions\RechargeException
+     * @see https://developer.rechargepayments.com/2021-11/charges#remove-free-gift
+     */
+    public function removeFreeGift(int $chargeId, array $data): Charge
+    {
+        // Ensure we're using 2021-11 API version for this endpoint
+        $originalVersion = $this->client->getApiVersion();
+        if ($originalVersion !== ApiVersion::V2021_11) {
+            $this->client->setApiVersion(ApiVersion::V2021_11);
+        }
+
+        try {
+            $response = $this->client->post($this->buildEndpoint("{$chargeId}/remove_free_gift"), $data);
+
+            return Charge::fromArray($response['charge'] ?? []);
+        } finally {
+            // Restore original API version
+            if ($originalVersion !== ApiVersion::V2021_11) {
+                $this->client->setApiVersion($originalVersion);
+            }
+        }
     }
 
     /**

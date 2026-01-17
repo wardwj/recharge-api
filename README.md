@@ -258,6 +258,51 @@ foreach ($client->bundles()->list(['sort_by' => BundleSort::UPDATED_AT_DESC]) as
 }
 ```
 
+### Charges
+
+```php
+// List charges
+foreach ($client->charges()->list(['status' => 'queued']) as $charge) {
+    echo "Charge ID: {$charge->id}, Status: {$charge->status?->value}\n";
+}
+
+// Get a charge
+$charge = $client->charges()->get(123);
+
+// Get count of charges
+$queuedCount = $client->charges()->count(['status' => 'queued']);
+
+// Apply discount to a charge
+$client->charges()->applyDiscount(123, ['discount_code' => 'SAVE10']);
+
+// Remove discount from a charge
+$client->charges()->removeDiscount(123);
+
+// Skip a charge
+$client->charges()->skip(123);
+
+// Unskip a charge
+$client->charges()->unskip(123);
+
+// Process a charge (Pro merchants only)
+$client->charges()->process(123);
+
+// Refund a charge
+$client->charges()->refund(123, ['amount' => 10.00]);
+
+// Capture a charge (Pro merchants only)
+$client->charges()->capture(123);
+
+// Change next charge date
+$client->charges()->changeNextChargeDate(123, ['scheduled_at' => '2024-12-31']);
+
+// Add free gift (2021-11 only)
+$client->charges()->addFreeGift(123, ['external_variant_id' => ['ecommerce' => 'shopify', 'variant_id' => '456']]);
+
+// Remove free gift (2021-11 only)
+$client->charges()->removeFreeGift(123, ['external_variant_id' => ['ecommerce' => 'shopify', 'variant_id' => '456']]);
+```
+
 ## API Version
 
 ```php
@@ -280,7 +325,7 @@ $client->setApiVersion(ApiVersion::V2021_11);
 - `addresses()` - Manage addresses
 - `discounts()` - Manage discounts
 - `bundles()` - Manage bundles
-- `charges()` - Manage charges
+- `charges()` - Manage charges (with full CRUD and action methods)
 - `orders()` - Manage orders
 - `products()` - List products
 - `store()` - Get store info
