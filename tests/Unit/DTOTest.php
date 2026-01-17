@@ -8,9 +8,14 @@ use PHPUnit\Framework\TestCase;
 use Recharge\Data\Address;
 use Recharge\Data\Charge;
 use Recharge\Data\Customer;
+use Recharge\Data\Discount;
 use Recharge\Data\Order;
 use Recharge\Data\Subscription;
+use Recharge\Enums\AppliesToProductType;
 use Recharge\Enums\ChargeStatus;
+use Recharge\Enums\DiscountDuration;
+use Recharge\Enums\DiscountStatus;
+use Recharge\Enums\DiscountType;
 use Recharge\Enums\OrderStatus;
 use Recharge\Enums\SubscriptionStatus;
 
@@ -311,5 +316,127 @@ class DTOTest extends TestCase
         $this->assertArrayHasKey('title', $array);
         // Null values should be filtered out
         $this->assertArrayNotHasKey('address_id', $array);
+    }
+
+    // Discount Tests
+
+    public function testDiscountParsesVersion2021_01Response(): void
+    {
+        $data = [
+            'id' => 123,
+            'code' => 'SAVE10',
+            'discount_type' => 'percentage', // 2021-01 uses discount_type
+            'value' => 10,
+            'status' => 'enabled',
+            'duration' => 'forever',
+            'usage_limit' => 100,
+            'times_used' => 5,
+            'applies_to_product_type' => 'ALL',
+            'created_at' => '2024-01-01T00:00:00Z',
+            'updated_at' => '2024-01-10T00:00:00Z',
+        ];
+
+        $discount = Discount::fromArray($data);
+
+        $this->assertEquals(123, $discount->id);
+        $this->assertEquals('SAVE10', $discount->code);
+        $this->assertEquals(DiscountType::PERCENTAGE, $discount->discountType);
+        $this->assertEquals(10.0, $discount->value);
+        $this->assertEquals(DiscountStatus::ENABLED, $discount->status);
+        $this->assertEquals(DiscountDuration::FOREVER, $discount->duration);
+        $this->assertEquals(100, $discount->usageLimit);
+        $this->assertEquals(5, $discount->timesUsed);
+        $this->assertEquals(AppliesToProductType::ALL, $discount->appliesToProductType);
+    }
+
+    public function testDiscountParsesVersion2021_11Response(): void
+    {
+        $data = [
+            'id' => 456,
+            'code' => 'FIXED20',
+            'value_type' => 'fixed_amount', // 2021-11 uses value_type
+            'value' => 20,
+            'status' => 'enabled',
+            'duration' => 'usage_limit',
+            'usage_limit' => 50,
+            'times_used' => 10,
+            'applies_to_product_type' => 'SUBSCRIPTION',
+            'channel_settings' => [
+                'api' => ['can_apply' => true],
+                'checkout_page' => ['can_apply' => true],
+            ],
+            'created_at' => '2024-01-01T00:00:00Z',
+            'updated_at' => '2024-01-10T00:00:00Z',
+        ];
+
+        $discount = Discount::fromArray($data);
+
+        $this->assertEquals(456, $discount->id);
+        $this->assertEquals('FIXED20', $discount->code);
+        $this->assertEquals(DiscountType::FIXED_AMOUNT, $discount->discountType);
+        $this->assertEquals(20.0, $discount->value);
+        $this->assertEquals(DiscountDuration::USAGE_LIMIT, $discount->duration);
+        $this->assertEquals(50, $discount->usageLimit);
+        $this->assertEquals(10, $discount->timesUsed);
+        $this->assertEquals(AppliesToProductType::SUBSCRIPTION, $discount->appliesToProductType);
+        $this->assertIsArray($discount->channelSettings);
+        $this->assertArrayHasKey('api', $discount->channelSettings);
+    }
+
+    public function testDiscountIsActiveHelper(): void
+    {
+        $now = new \DateTimeImmutable();
+        $future = $now->modify('+1 day');
+        $past = $now->modify('-1 day');
+
+        // Active discount
+        $active = Discount::fromArray([
+            'id' => 1,
+            'status' => 'enabled',
+            'starts_at' => $past->format('Y-m-d\TH:i:s\Z'),
+            'ends_at' => $future->format('Y-m-d\TH:i:s\Z'),
+        ]);
+        $this->assertTrue($active->isActive());
+
+        // Disabled discount
+        $disabled = Discount::fromArray([
+            'id' => 2,
+            'status' => 'disabled',
+        ]);
+        $this->assertFalse($disabled->isActive());
+
+        // Expired discount
+        $expired = Discount::fromArray([
+            'id' => 3,
+            'status' => 'enabled',
+            'ends_at' => $past->format('Y-m-d\TH:i:s\Z'),
+        ]);
+        $this->assertFalse($expired->isActive());
+    }
+
+    public function testDiscountHasReachedUsageLimitHelper(): void
+    {
+        // Has reached limit
+        $limited = Discount::fromArray([
+            'id' => 1,
+            'usage_limit' => 10,
+            'times_used' => 10,
+        ]);
+        $this->assertTrue($limited->hasReachedUsageLimit());
+
+        // Has not reached limit
+        $notLimited = Discount::fromArray([
+            'id' => 2,
+            'usage_limit' => 10,
+            'times_used' => 5,
+        ]);
+        $this->assertFalse($notLimited->hasReachedUsageLimit());
+
+        // No limit set
+        $noLimit = Discount::fromArray([
+            'id' => 3,
+            'times_used' => 100,
+        ]);
+        $this->assertFalse($noLimit->hasReachedUsageLimit());
     }
 }

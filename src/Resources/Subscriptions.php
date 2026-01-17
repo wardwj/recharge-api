@@ -8,8 +8,6 @@ use Recharge\Data\Subscription;
 use Recharge\Enums\ApiVersion;
 use Recharge\Enums\Sort\SubscriptionSort;
 use Recharge\RechargeClient;
-use Recharge\Requests\CreateSubscriptionData;
-use Recharge\Requests\UpdateSubscriptionData;
 use Recharge\Support\Paginator;
 
 /**
@@ -95,14 +93,14 @@ class Subscriptions extends AbstractResource
     /**
      * Create a new subscription
      *
-     * @param CreateSubscriptionData $data Subscription creation data
+     * @param array<string, mixed> $data Subscription creation data
      * @return Subscription Created Subscription DTO
      * @throws \Recharge\Exceptions\RechargeException
      * @see https://developer.rechargepayments.com/2021-11/subscriptions#create-a-subscription
      */
-    public function create(CreateSubscriptionData $data): Subscription
+    public function create(array $data): Subscription
     {
-        $response = $this->client->post($this->endpoint, $data->toArray());
+        $response = $this->client->post($this->endpoint, $data);
 
         return Subscription::fromArray($response['subscription'] ?? []);
     }
@@ -111,14 +109,14 @@ class Subscriptions extends AbstractResource
      * Update an existing subscription
      *
      * @param int $id Subscription ID
-     * @param UpdateSubscriptionData $data Subscription update data
+     * @param array<string, mixed> $data Subscription update data
      * @return Subscription Updated Subscription DTO
      * @throws \Recharge\Exceptions\RechargeException
      * @see https://developer.rechargepayments.com/2021-11/subscriptions#update-a-subscription
      */
-    public function update(int $id, UpdateSubscriptionData $data): Subscription
+    public function update(int $id, array $data): Subscription
     {
-        $response = $this->client->put($this->buildEndpoint((string) $id), $data->toArray());
+        $response = $this->client->put($this->buildEndpoint((string) $id), $data);
 
         return Subscription::fromArray($response['subscription'] ?? []);
     }

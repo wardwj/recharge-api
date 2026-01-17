@@ -74,6 +74,7 @@ The SDK supports sorting for list operations using type-safe enums or strings. U
 - `ChargeSort` - For charges
 - `OrderSort` - For orders
 - `CustomerSort` - For customers
+- `DiscountSort` - For discounts
 
 **Subscriptions (`SubscriptionSort`):**
 - `SubscriptionSort::ID_ASC`, `SubscriptionSort::ID_DESC` (default)
@@ -98,6 +99,11 @@ The SDK supports sorting for list operations using type-safe enums or strings. U
 - `CustomerSort::CREATED_AT_ASC`, `CustomerSort::CREATED_AT_DESC`
 - `CustomerSort::UPDATED_AT_ASC`, `CustomerSort::UPDATED_AT_DESC`
 
+**Discounts (`DiscountSort`):**
+- `DiscountSort::ID_ASC`, `DiscountSort::ID_DESC` (default)
+- `DiscountSort::CREATED_AT_ASC`, `DiscountSort::CREATED_AT_DESC`
+- `DiscountSort::UPDATED_AT_ASC`, `DiscountSort::UPDATED_AT_DESC`
+
 ```php
 use Recharge\Enums\Sort\SubscriptionSort;
 use Recharge\Enums\Sort\ChargeSort;
@@ -118,6 +124,13 @@ foreach ($client->charges()->list([
 // String values also work (for backward compatibility)
 foreach ($client->subscriptions()->list(['sort_by' => 'created_at-desc']) as $sub) {
     // ...
+}
+
+// Discounts sorting
+use Recharge\Enums\Sort\DiscountSort;
+
+foreach ($client->discounts()->list(['sort_by' => DiscountSort::CREATED_AT_DESC]) as $discount) {
+    // Discounts sorted by creation date (newest first)
 }
 ```
 
@@ -145,34 +158,68 @@ $queuedCount = $client->charges()->count(['status' => 'queued']);
 ### Create Subscription
 
 ```php
-use Recharge\Requests\CreateSubscriptionData;
-
-$subscription = $client->subscriptions()->create(
-    new CreateSubscriptionData(
-        customerId: 456,
-        quantity: 2,
-        price: 29.99,
-        interval: '1 month'
-    )
-);
+$subscription = $client->subscriptions()->create([
+    'customer_id' => 456,
+    'quantity' => 2,
+    'price' => 29.99,
+    'order_interval_unit' => 'month',
+    'order_interval_frequency' => 1,
+]);
 ```
 
 ### Update & Delete
 
 ```php
-use Recharge\Requests\UpdateSubscriptionData;
-
 // Update
-$client->subscriptions()->update(
-    123,
-    new UpdateSubscriptionData(quantity: 3, price: 39.99)
-);
+$client->subscriptions()->update(123, [
+    'quantity' => 3,
+    'price' => 39.99,
+]);
 
 // Cancel
 $client->subscriptions()->cancel(123, 'Customer requested');
 
 // Delete
 $client->subscriptions()->delete(123);
+```
+
+### Discounts
+
+```php
+// List discounts
+foreach ($client->discounts()->list() as $discount) {
+    echo $discount->code . " - " . $discount->value . "\n";
+}
+
+// Get a discount
+$discount = $client->discounts()->get(123);
+
+// Create a discount
+$discount = $client->discounts()->create([
+    'code' => 'SAVE10',
+    'discount_type' => 'percentage', // or 'value_type' in 2021-11
+    'value' => 10,
+    'duration' => 'forever',
+    'status' => 'enabled',
+]);
+
+// Update a discount
+$client->discounts()->update(123, ['value' => 15]);
+
+// Delete a discount
+$client->discounts()->delete(123);
+
+// Get count of discounts (requires API 2021-01, automatically handled)
+$count = $client->discounts()->count(['status' => 'enabled']);
+
+// Apply discount to an address
+$client->discounts()->applyToAddress(456, ['discount_code' => 'SAVE10']);
+
+// Apply discount to a charge
+$client->discounts()->applyToCharge(789, ['discount_code' => 'SAVE10']);
+
+// Remove a discount
+$client->discounts()->remove(['address_id' => 456]);
 ```
 
 ## API Version
@@ -195,6 +242,7 @@ $client->setApiVersion(ApiVersion::V2021_11);
 - `subscriptions()` - Manage subscriptions
 - `customers()` - Manage customers
 - `addresses()` - Manage addresses
+- `discounts()` - Manage discounts
 - `charges()` - Manage charges
 - `orders()` - Manage orders
 - `products()` - List products
