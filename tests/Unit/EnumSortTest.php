@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Recharge\Tests\Unit;
 
 use PHPUnit\Framework\TestCase;
+use Recharge\Enums\Sort\BundleSort;
 use Recharge\Enums\Sort\ChargeSort;
 use Recharge\Enums\Sort\CustomerSort;
 use Recharge\Enums\Sort\OrderSort;
@@ -96,5 +97,17 @@ class EnumSortTest extends TestCase
         $values = array_column(CustomerSort::cases(), 'value');
         $this->assertNotContains('scheduled_at-asc', $values);
         $this->assertNotContains('scheduled_at-desc', $values);
+    }
+
+    public function testBundleSortEnum(): void
+    {
+        $this->assertEquals('id-desc', BundleSort::ID_DESC->value);
+        $this->assertEquals('updated_at-asc', BundleSort::UPDATED_AT_ASC->value);
+    }
+
+    public function testBundleSortDefault(): void
+    {
+        $default = BundleSort::default();
+        $this->assertEquals(BundleSort::ID_DESC, $default);
     }
 }

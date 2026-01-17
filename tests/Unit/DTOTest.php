@@ -6,6 +6,7 @@ namespace Recharge\Tests\Unit;
 
 use PHPUnit\Framework\TestCase;
 use Recharge\Data\Address;
+use Recharge\Data\Bundle;
 use Recharge\Data\Charge;
 use Recharge\Data\Customer;
 use Recharge\Data\Discount;
@@ -438,5 +439,54 @@ class DTOTest extends TestCase
             'times_used' => 100,
         ]);
         $this->assertFalse($noLimit->hasReachedUsageLimit());
+    }
+
+    // Bundle Tests
+    public function testBundleParsesBasicResponse(): void
+    {
+        $data = [
+            'id' => 1,
+            'bundle_variant_id' => 123,
+            'purchase_item_id' => 456,
+            'external_product_id' => ['ecommerce' => 'shopify', 'product_id' => '789'],
+            'external_variant_id' => ['ecommerce' => 'shopify', 'variant_id' => '101'],
+            'items' => [
+                [
+                    'id' => 1,
+                    'collection_id' => 10,
+                    'quantity' => 2,
+                ],
+            ],
+            'created_at' => '2024-01-01T00:00:00Z',
+            'updated_at' => '2024-01-01T00:00:00Z',
+        ];
+
+        $bundle = Bundle::fromArray($data);
+
+        $this->assertEquals(1, $bundle->id);
+        $this->assertEquals(123, $bundle->bundleVariantId);
+        $this->assertEquals(456, $bundle->purchaseItemId);
+        $this->assertIsArray($bundle->externalProductId);
+        $this->assertIsArray($bundle->externalVariantId);
+        $this->assertIsArray($bundle->items);
+        $this->assertCount(1, $bundle->items);
+        $this->assertNotNull($bundle->createdAt);
+        $this->assertNotNull($bundle->updatedAt);
+    }
+
+    public function testBundleHandlesNullFields(): void
+    {
+        $data = [
+            'id' => 2,
+        ];
+
+        $bundle = Bundle::fromArray($data);
+
+        $this->assertEquals(2, $bundle->id);
+        $this->assertNull($bundle->bundleVariantId);
+        $this->assertNull($bundle->purchaseItemId);
+        $this->assertNull($bundle->externalProductId);
+        $this->assertNull($bundle->externalVariantId);
+        $this->assertNull($bundle->items);
     }
 }

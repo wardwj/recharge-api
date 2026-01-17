@@ -75,6 +75,7 @@ The SDK supports sorting for list operations using type-safe enums or strings. U
 - `OrderSort` - For orders
 - `CustomerSort` - For customers
 - `DiscountSort` - For discounts
+- `BundleSort` - For bundles
 
 **Subscriptions (`SubscriptionSort`):**
 - `SubscriptionSort::ID_ASC`, `SubscriptionSort::ID_DESC` (default)
@@ -103,6 +104,10 @@ The SDK supports sorting for list operations using type-safe enums or strings. U
 - `DiscountSort::ID_ASC`, `DiscountSort::ID_DESC` (default)
 - `DiscountSort::CREATED_AT_ASC`, `DiscountSort::CREATED_AT_DESC`
 - `DiscountSort::UPDATED_AT_ASC`, `DiscountSort::UPDATED_AT_DESC`
+
+**Bundles (`BundleSort`):**
+- `BundleSort::ID_ASC`, `BundleSort::ID_DESC` (default)
+- `BundleSort::UPDATED_AT_ASC`, `BundleSort::UPDATED_AT_DESC`
 
 ```php
 use Recharge\Enums\Sort\SubscriptionSort;
@@ -222,6 +227,37 @@ $client->discounts()->applyToCharge(789, ['discount_code' => 'SAVE10']);
 $client->discounts()->remove(['address_id' => 456]);
 ```
 
+### Bundle Selections
+
+```php
+// List bundle selections
+foreach ($client->bundles()->list() as $bundle) {
+    echo "Bundle Selection ID: {$bundle->id}\n";
+}
+
+// Get a bundle selection
+$bundle = $client->bundles()->get(123);
+
+// Create a bundle selection
+$bundle = $client->bundles()->create([
+    'bundle_variant_id' => 456,
+    'purchase_item_id' => 789,
+]);
+
+// Update a bundle selection
+$client->bundles()->update(123, ['purchase_item_id' => 999]);
+
+// Delete a bundle selection
+$client->bundles()->delete(123);
+
+// With sorting
+use Recharge\Enums\Sort\BundleSort;
+
+foreach ($client->bundles()->list(['sort_by' => BundleSort::UPDATED_AT_DESC]) as $bundle) {
+    // Bundle selections sorted by update date (newest first)
+}
+```
+
 ## API Version
 
 ```php
@@ -243,6 +279,7 @@ $client->setApiVersion(ApiVersion::V2021_11);
 - `customers()` - Manage customers
 - `addresses()` - Manage addresses
 - `discounts()` - Manage discounts
+- `bundles()` - Manage bundles
 - `charges()` - Manage charges
 - `orders()` - Manage orders
 - `products()` - List products
