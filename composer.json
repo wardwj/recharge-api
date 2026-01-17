@@ -1,5 +1,5 @@
 {
-    "name": "vendor/recharge-api",
+    "name": "wardwj/recharge-api",
     "description": "Enterprise-grade PHP SDK for Recharge Payments API - Multi-version support (2021-01, 2021-11) with PSR compliance",
     "type": "library",
     "license": "MIT",
@@ -23,11 +23,11 @@
         "php": "^8.2",
         "guzzlehttp/guzzle": "^7.8",
         "guzzlehttp/psr7": "^2.6",
-        "nesbot/carbon": "^2.71",
+        "nesbot/carbon": "^2.0 || ^3.0",
         "php-http/discovery": "^1.19",
         "psr/http-client": "^1.0",
         "psr/http-factory": "^1.0",
-        "psr/http-message": "^1.0",
+        "psr/http-message": "^1.0 || ^2.0",
         "psr/log": "^3.0"
     },
     "require-dev": {

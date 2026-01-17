@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Recharge\Resources;
 
 use Recharge\Data\Subscription;
+use Recharge\Enums\ApiVersion;
 use Recharge\RechargeClient;
 use Recharge\Requests\CreateSubscriptionData;
 use Recharge\Requests\UpdateSubscriptionData;
@@ -170,5 +171,32 @@ class Subscriptions extends AbstractResource
         $response = $this->client->post($this->buildEndpoint("{$subscriptionId}/change_address"), $data);
 
         return Subscription::fromArray($response['subscription'] ?? []);
+    }
+
+    /**
+     * Get count of subscriptions
+     *
+     * Count endpoint is only available in API version 2021-01.
+     * This method temporarily switches to 2021-01, makes the request, then restores the original version.
+     *
+     * @param array<string, mixed> $queryParams Query parameters for filtering (status, customer_id, etc.)
+     * @return int Count of subscriptions matching the filters
+     * @throws \Recharge\Exceptions\RechargeException
+     * @see https://developer.rechargepayments.com/2021-01/subscriptions#count-subscriptions
+     */
+    public function count(array $queryParams = []): int
+    {
+        $originalVersion = $this->client->getApiVersion();
+
+        try {
+            // Count endpoint requires 2021-01 API version
+            $this->client->setApiVersion(ApiVersion::V2021_01);
+            $response = $this->client->get($this->buildEndpoint('count'), $queryParams);
+
+            return (int) ($response['count'] ?? 0);
+        } finally {
+            // Restore original API version
+            $this->client->setApiVersion($originalVersion);
+        }
     }
 }

@@ -28,7 +28,5 @@ composer.lock
 # Environment
 .env
 .env.local
-.env.*.local
-
-# Logs
+.env.*.local# Logs
 *.log

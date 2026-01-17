@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Recharge\Resources;
 
 use Recharge\Data\Charge;
+use Recharge\Enums\ApiVersion;
 use Recharge\Support\Paginator;
 
 /**
@@ -179,5 +180,32 @@ class Charges extends AbstractResource
         $response = $this->client->post($this->buildEndpoint("{$chargeId}/capture"));
 
         return Charge::fromArray($response['charge'] ?? []);
+    }
+
+    /**
+     * Get count of charges
+     *
+     * Count endpoint is only available in API version 2021-01.
+     * This method temporarily switches to 2021-01, makes the request, then restores the original version.
+     *
+     * @param array<string, mixed> $queryParams Query parameters for filtering (status, customer_id, scheduled_at_min, etc.)
+     * @return int Count of charges matching the filters
+     * @throws \Recharge\Exceptions\RechargeException
+     * @see https://developer.rechargepayments.com/2021-01/charges#count-charges
+     */
+    public function count(array $queryParams = []): int
+    {
+        $originalVersion = $this->client->getApiVersion();
+
+        try {
+            // Count endpoint requires 2021-01 API version
+            $this->client->setApiVersion(ApiVersion::V2021_01);
+            $response = $this->client->get($this->buildEndpoint('count'), $queryParams);
+
+            return (int) ($response['count'] ?? 0);
+        } finally {
+            // Restore original API version
+            $this->client->setApiVersion($originalVersion);
+        }
     }
 }

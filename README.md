@@ -61,6 +61,19 @@ $customer = $client->customers()->get(456);
 $order = $client->orders()->get(789);
 ```
 
+### Get Count
+
+```php
+// Get count of subscriptions (requires API 2021-01, automatically handled)
+$count = $client->subscriptions()->count(['status' => 'ACTIVE']);
+
+// Get count of charges with filters
+$queuedCount = $client->charges()->count(['status' => 'queued']);
+
+// Note: Count endpoints are only available in API version 2021-01.
+// The count() method automatically switches to 2021-01 for the request.
+```
+
 ### Create Subscription
 
 ```php
