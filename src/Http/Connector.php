@@ -202,7 +202,13 @@ final readonly class Connector
 
         // Handle error responses
         if ($statusCode >= 400) {
-            $message = $body['error'] ?? $body['errors'] ?? $response->getReasonPhrase();
+            // Extract error message (can be string or array)
+            $message = $response->getReasonPhrase();
+            if (isset($body['error'])) {
+                $message = is_string($body['error']) ? $body['error'] : (string) json_encode($body['error']);
+            } elseif (isset($body['errors'])) {
+                $message = is_string($body['errors']) ? $body['errors'] : (string) json_encode($body['errors']);
+            }
 
             if ($statusCode === 401 || $statusCode === 403) {
                 throw new RechargeAuthenticationException(

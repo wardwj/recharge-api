@@ -33,6 +33,7 @@ final readonly class Store
         public ?string $name = null,
         public ?string $domain = null,
         public ?string $email = null,
+        public ?string $phone = null,
         public ?string $currency = null,
         public ?array $timezone = null,
         public ?CarbonImmutable $createdAt = null,
@@ -61,6 +62,7 @@ final readonly class Store
             name: $data['name'] ?? null,
             domain: $data['domain'] ?? null,
             email: $data['email'] ?? null,
+            phone: $data['phone'] ?? null,
             currency: $data['currency'] ?? null,
             timezone: $data['timezone'] ?? null,
             createdAt: isset($data['created_at'])
