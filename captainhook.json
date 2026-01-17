@@ -1,0 +1,63 @@
+{
+    "$schema": "vendor/captainhook/captainhook/config/captainhook-schema.json",
+    "config": {
+        "ansi-colors": true,
+        "fail-on-first-error": false,
+        "verbosity": "normal",
+        "run-mode": "local"
+    },
+    "pre-commit": {
+        "enabled": true,
+        "actions": [
+            {
+                "action": "\\CaptainHook\\App\\Hook\\PHP\\Action\\Linting",
+                "options": [],
+                "conditions": []
+            },
+            {
+                "action": "vendor/bin/php-cs-fixer fix --dry-run --diff --config=.php-cs-fixer.php",
+                "options": [],
+                "conditions": [
+                    {
+                        "exec": "\\CaptainHook\\App\\Hook\\Condition\\FileStaged\\OfType",
+                        "args": ["php"]
+                    }
+                ]
+            },
+            {
+                "action": "vendor/bin/phpstan analyse --no-progress",
+                "options": [],
+                "conditions": [
+                    {
+                        "exec": "\\CaptainHook\\App\\Hook\\Condition\\FileStaged\\OfType",
+                        "args": ["php"]
+                    }
+                ]
+            }
+        ]
+    },
+    "commit-msg": {
+        "enabled": false,
+        "actions": []
+    },
+    "pre-push": {
+        "enabled": false,
+        "actions": []
+    },
+    "post-commit": {
+        "enabled": false,
+        "actions": []
+    },
+    "post-merge": {
+        "enabled": false,
+        "actions": []
+    },
+    "post-checkout": {
+        "enabled": false,
+        "actions": []
+    },
+    "post-rewrite": {
+        "enabled": false,
+        "actions": []
+    }
+}

@@ -1,14 +1,17 @@
-# Recharge API PHP Client
+# Recharge API PHP SDK
 
-PHP SDK for the Recharge Payments API supporting both API versions 2021-01 and 2021-11.
+[![PHP Version](https://img.shields.io/badge/php-%5E8.2-blue)](https://www.php.net/)
+[![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+
+Modern, type-safe PHP SDK for the [Recharge Payments API](https://developer.rechargepayments.com/).
 
 ## Features
 
-- ✅ Support for both API versions (2021-01 and 2021-11)
-- ✅ Version-specific DTOs for type safety
-- ✅ Fluent interface for easy API interaction
-- ✅ Automatic DTO version selection based on API version
-- ✅ Comprehensive exception handling
+- 🚀 **Simple API** - Clean, intuitive interface
+- 🔄 **Auto Pagination** - Handles cursor pagination automatically
+- 🔒 **Type-Safe** - Full type hints with PHP 8.2+ enums
+- ✅ **Multi-Version** - Supports API versions 2021-01 and 2021-11
+- 📦 **PSR Compliant** - Follows PHP standards (PSR-3, PSR-7, PSR-12, PSR-18)
 
 ## Installation
 
@@ -16,207 +19,184 @@ PHP SDK for the Recharge Payments API supporting both API versions 2021-01 and 2
 composer require vendor/recharge-api
 ```
 
-Or add to your `composer.json`:
-
-```json
-{
-    "require": {
-        "vendor/recharge-api": "^1.0"
-    }
-}
-```
-
 ## Quick Start
 
 ```php
-<?php
+use Recharge\RechargeClient;
 
-require_once 'vendor/autoload.php';
-
-use Recharge\Client;
-
-// Initialize client with API token (defaults to 2021-11)
-$client = new Client('your_api_token');
-
-// Get store information
-$store = $client->store()->get();
-echo "Store: " . $store->getName() . "\n";
-
-// List customers
-$customers = $client->customers()->list(['limit' => 10]);
-foreach ($customers as $customer) {
-    echo "Customer: " . $customer->getEmail() . "\n";
-}
+$client = new RechargeClient('your-api-token');
 
 // List subscriptions
-$subscriptions = $client->subscriptions()->list(['limit' => 10]);
-foreach ($subscriptions as $subscription) {
-    echo "Subscription: " . $subscription->getId() . "\n";
+foreach ($client->subscriptions()->list() as $subscription) {
+    echo $subscription->id . "\n";
 }
 ```
 
-## API Version Support
+## Usage
 
-The client supports both API versions 2021-01 and 2021-11. Version-specific DTOs are automatically selected based on the client's API version setting.
-
-### Using API Version 2021-11 (default)
+### List Resources
 
 ```php
-$client = new Client('your_api_token', Client::API_VERSION_2021_11);
-// or simply
-$client = new Client('your_api_token');
+// Subscriptions
+foreach ($client->subscriptions()->list() as $sub) {
+    echo $sub->id . " - " . $sub->getProductTitle() . "\n";
+}
 
-$store = $client->store()->get();
-// Returns: Recharge\DTO\V2021_11\Store
+// Customers
+foreach ($client->customers()->list() as $customer) {
+    echo $customer->email . "\n";
+}
+
+// With filters
+foreach ($client->subscriptions()->list(['status' => 'ACTIVE']) as $sub) {
+    // Process active subscriptions
+}
 ```
 
-### Using API Version 2021-01
+### Get Single Resource
 
 ```php
-$client = new Client('your_api_token', Client::API_VERSION_2021_01);
-
-$store = $client->store()->get();
-// Returns: Recharge\DTO\V2021_01\Store
+$subscription = $client->subscriptions()->get(123);
+$customer = $client->customers()->get(456);
+$order = $client->orders()->get(789);
 ```
 
-### Switching API Versions
+### Create Subscription
 
 ```php
-$client = new Client('your_api_token');
+use Recharge\Requests\CreateSubscriptionData;
 
-// Switch to 2021-01
-$client->setApiVersion(Client::API_VERSION_2021_01);
-$store = $client->store()->get(); // Uses 2021-01 DTO
+$subscription = $client->subscriptions()->create(
+    new CreateSubscriptionData(
+        customerId: 456,
+        quantity: 2,
+        price: 29.99,
+        interval: '1 month'
+    )
+);
+```
 
-// Switch back to 2021-11
-$client->setApiVersion(Client::API_VERSION_2021_11);
-$store = $client->store()->get(); // Uses 2021-11 DTO
+### Update & Delete
+
+```php
+use Recharge\Requests\UpdateSubscriptionData;
+
+// Update
+$client->subscriptions()->update(
+    123,
+    new UpdateSubscriptionData(quantity: 3, price: 39.99)
+);
+
+// Cancel
+$client->subscriptions()->cancel(123, 'Customer requested');
+
+// Delete
+$client->subscriptions()->delete(123);
+```
+
+## API Version
+
+```php
+use Recharge\Enums\ApiVersion;
+
+// Default is 2021-11
+$client = new RechargeClient($token);
+
+// Use 2021-01
+$client = new RechargeClient($token, ApiVersion::V2021_01);
+
+// Switch versions
+$client->setApiVersion(ApiVersion::V2021_11);
 ```
 
 ## Available Resources
 
-- **Customers** - `$client->customers()`
-- **Subscriptions** - `$client->subscriptions()`
-- **Charges** - `$client->charges()`
-- **Orders** - `$client->orders()`
-- **Addresses** - `$client->addresses()`
-- **Products** - `$client->products()`
-- **Store** - `$client->store()`
+- `subscriptions()` - Manage subscriptions
+- `customers()` - Manage customers
+- `addresses()` - Manage addresses
+- `charges()` - Manage charges
+- `orders()` - Manage orders
+- `products()` - List products
+- `store()` - Get store info
 
-## Examples
-
-### Customers
+## Error Handling
 
 ```php
-// List customers
-$customers = $client->customers()->list(['limit' => 10]);
-
-// Get a customer
-$customer = $client->customers()->get(123);
-
-// Create a customer
-$customer = $client->customers()->create([
-    'email' => 'customer@example.com',
-    'first_name' => 'John',
-    'last_name' => 'Doe'
-]);
-
-// Update a customer
-$customer = $client->customers()->update(123, [
-    'first_name' => 'Jane'
-]);
-
-// Delete a customer
-$client->customers()->delete(123);
-```
-
-### Subscriptions
-
-```php
-// List subscriptions
-$subscriptions = $client->subscriptions()->list(['status' => 'ACTIVE']);
-
-// Get a subscription
-$subscription = $client->subscriptions()->get(456);
-
-// Create a subscription
-$subscription = $client->subscriptions()->create([
-    'customer_id' => 123,
-    'address_id' => 789,
-    'quantity' => 1,
-    'price' => '29.99'
-]);
-
-// Cancel a subscription
-$subscription = $client->subscriptions()->cancel(456, [
-    'cancellation_reason' => 'customer_request'
-]);
-
-// Activate a subscription
-$subscription = $client->subscriptions()->activate(456);
-```
-
-## Testing
-
-### Quick Test Script
-
-Run the example script with your API token:
-
-```bash
-php example.php YOUR_API_TOKEN
-```
-
-Or set the token as an environment variable:
-
-```bash
-export RECHARGE_API_TOKEN=your_api_token
-php example.php
-```
-
-### PHPUnit Tests
-
-Run the test suite:
-
-```bash
-export RECHARGE_API_TOKEN=your_api_token
-vendor/bin/phpunit
-```
-
-## Exception Handling
-
-The client throws specific exceptions for different error scenarios:
-
-```php
-use Recharge\Exceptions\RechargeException;
-use Recharge\Exceptions\RechargeAuthenticationException;
-use Recharge\Exceptions\RechargeApiException;
+use Recharge\Exceptions\{RechargeApiException, ValidationException};
 
 try {
-    $customer = $client->customers()->get(123);
-} catch (RechargeAuthenticationException $e) {
-    // Authentication failed (401, 403)
-    echo "Auth error: " . $e->getMessage();
+    $sub = $client->subscriptions()->get(123);
+} catch (ValidationException $e) {
+    // Client-side validation errors
+    print_r($e->getErrors());
 } catch (RechargeApiException $e) {
-    // API error (4xx, 5xx)
-    echo "API error: " . $e->getMessage();
-    echo "Status code: " . $e->getCode();
-} catch (RechargeException $e) {
-    // General error
-    echo "Error: " . $e->getMessage();
+    // API errors
+    echo $e->getMessage();
 }
 ```
 
-## Requirements
+## Pagination
 
-- PHP 7.4 or higher
-- Composer
-- Guzzle HTTP 7.0 or higher
+Pagination is automatic - just iterate:
 
-## License
+```php
+// Fetches all pages automatically
+foreach ($client->subscriptions()->list() as $sub) {
+    echo $sub->id . "\n";
+}
 
-MIT
+// With page size
+foreach ($client->subscriptions()->list(['limit' => 100]) as $sub) {
+    // Process in batches of 100
+}
+
+// Get first item
+$first = $client->subscriptions()->list()->first();
+
+// Get first N items
+$items = $client->subscriptions()->list()->take(50);
+```
+
+## Development
+
+```bash
+# Run tests
+composer test
+
+# Check code style
+composer cs:check
+
+# Fix code style
+composer cs:fix
+
+# Run static analysis
+composer analyse
+
+# Run all quality checks
+composer quality
+```
+
+### Git Hooks
+
+Pre-commit hooks are automatically installed to ensure code quality:
+
+```bash
+# Hooks auto-install with composer install/update
+
+# Manually manage
+composer hooks:install
+composer hooks:uninstall
+
+# Bypass if needed
+git commit --no-verify
+```
 
 ## Documentation
 
-- [Recharge API Documentation (2021-11)](https://developer.rechargepayments.com/2021-11/)
-- [Recharge API Documentation (2021-01)](https://developer.rechargepayments.com/2021-01/)
+- [Recharge API 2021-11](https://developer.rechargepayments.com/2021-11)
+- [Recharge API 2021-01](https://developer.rechargepayments.com/2021-01)
+- [Changelog](CHANGELOG.md)
+
+## License
+
+MIT License - See [LICENSE](LICENSE)

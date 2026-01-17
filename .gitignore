@@ -1,7 +1,6 @@
-# Composer
+# Dependencies
 /vendor/
 composer.lock
-composer.phar
 
 # IDE
 .idea/
@@ -11,14 +10,25 @@ composer.phar
 *~
 .DS_Store
 
-# PHP
-*.log
-*.cache
-.phpunit.result.cache
-
 # Testing
-/tests/coverage/
+/coverage/
+.phpunit.result.cache
 .phpunit.cache
 
-# Build
+# PHP CS Fixer
+.php-cs-fixer.cache
+
+# PHPStan
+.phpstan.cache
+
+# Build artifacts
 /build/
+/dist/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log

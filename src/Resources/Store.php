@@ -1,14 +1,15 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Recharge\Resources;
 
-use Recharge\Client;
-use Recharge\DTO\DTOFactory;
+use Recharge\Data\Store as StoreDTO;
+use Recharge\RechargeClient;
 
 /**
  * Store resource for interacting with Recharge store endpoints
  *
- * @package Recharge\Resources
  * @see https://developer.rechargepayments.com/2021-11/store
  */
 class Store extends AbstractResource
@@ -21,9 +22,9 @@ class Store extends AbstractResource
     /**
      * Store constructor
      *
-     * @param Client $client The Recharge API client instance
+     * @param RechargeClient $client The Recharge API client instance
      */
-    public function __construct(Client $client)
+    public function __construct(RechargeClient $client)
     {
         parent::__construct($client);
     }
@@ -31,13 +32,14 @@ class Store extends AbstractResource
     /**
      * Retrieve store information
      *
-     * @return Store Store DTO
+     * @return StoreDTO Store DTO
      * @throws \Recharge\Exceptions\RechargeException
      * @see https://developer.rechargepayments.com/2021-11/store#retrieve-a-store
      */
-    public function get(): object
+    public function get(): StoreDTO
     {
         $response = $this->client->get($this->endpoint);
-        return DTOFactory::createStore($this->client, $response['store'] ?? []);
+
+        return StoreDTO::fromArray($response['store'] ?? []);
     }
 }

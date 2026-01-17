@@ -1,34 +1,42 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Recharge\Resources;
 
-use Recharge\Client;
+use Recharge\Contracts\ResourceInterface;
+use Recharge\Enums\ApiVersion;
+use Recharge\Exceptions\RechargeException;
+use Recharge\RechargeClient;
 
 /**
  * Abstract base class for all Recharge API resources
  *
- * @package Recharge\Resources
+ * Provides common functionality and enforces interface contract.
+ * All resource classes should extend this base class.
  */
-abstract class AbstractResource
+abstract class AbstractResource implements ResourceInterface
 {
-    /**
-     * @var Client The Recharge API client
-     */
-    protected Client $client;
-
-    /**
-     * @var string The resource endpoint base path
-     */
     protected string $endpoint;
 
     /**
-     * AbstractResource constructor
+     * API version requirements for this resource
+     * Override in child classes if endpoint has version restrictions
      *
-     * @param Client $client The Recharge API client instance
+     * @var array<string, array<ApiVersion>>
      */
-    public function __construct(Client $client)
+    protected array $versionRequirements = [];
+
+    public function __construct(protected RechargeClient $client)
     {
-        $this->client = $client;
+    }
+
+    /**
+     * Get the resource endpoint base path
+     */
+    public function getEndpoint(): string
+    {
+        return $this->endpoint;
     }
 
     /**
@@ -44,5 +52,64 @@ abstract class AbstractResource
         }
 
         return rtrim($this->endpoint, '/') . '/' . ltrim($path, '/');
+    }
+
+    /**
+     * Get the API client
+     */
+    protected function getClient(): RechargeClient
+    {
+        return $this->client;
+    }
+
+    /**
+     * Build query parameters with defaults
+     *
+     * @param array<string, mixed> $params User-provided parameters
+     * @param array<string, mixed> $defaults Default parameters
+     * @return array<string, mixed>
+     */
+    protected function buildQueryParams(array $params, array $defaults = []): array
+    {
+        return array_merge($defaults, array_filter($params, fn ($value): bool => $value !== null));
+    }
+
+    /**
+     * Normalize resource ID
+     *
+     * @param int|string $id Resource ID
+     */
+    protected function normalizeId(int|string $id): int
+    {
+        return (int) $id;
+    }
+
+    /**
+     * Check if method is supported in current API version
+     *
+     * @param string $method Method name
+     * @throws RechargeException If method not supported in current version
+     */
+    protected function requiresVersion(string $method): void
+    {
+        if (!isset($this->versionRequirements[$method])) {
+            return; // No restrictions
+        }
+
+        $currentVersion = $this->client->getApiVersion();
+        $requiredVersions = $this->versionRequirements[$method];
+
+        if (!in_array($currentVersion, $requiredVersions, true)) {
+            $versions = implode(', ', array_map(fn ($v) => $v->value, $requiredVersions));
+            throw new RechargeException(
+                sprintf(
+                    'Method %s::%s() is only available in API version(s): %s. Current version: %s',
+                    static::class,
+                    $method,
+                    $versions,
+                    $currentVersion->value
+                )
+            );
+        }
     }
 }

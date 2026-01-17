@@ -1,0 +1,35 @@
+parameters:
+    # Level 7 is industry standard for packages (Laravel, Symfony, etc.)
+    level: 7
+    
+    paths:
+        - src
+        - tests
+    
+    # Check PHP version compatibility
+    phpVersion: 80200
+    
+    # Additional checks (reasonable for packages)
+    reportUnmatchedIgnoredErrors: false
+    treatPhpDocTypesAsCertain: true
+    
+    # Ignore specific patterns that are acceptable in packages
+    ignoreErrors:
+        # Allow isset on non-nullable offsets in tests (common pattern)
+        - '#Offset .* on array.* in isset\(\) always exists and is not nullable#'
+        
+        # Collection offsetGet can return null when offset doesn't exist (ArrayAccess contract)
+        - '#Method .+Collection::offsetGet\(\) should return .+ but returns .+\|null#'
+        
+        # Test data properties don't need full type specification
+        - '#Property .+Test::\$testData type has no value type specified#'
+        
+        # Allow Collection generics in tests (PHPUnit limitation)
+        - '#Parameter .+ of method .+Assert::assertCount\(\) expects .+, .+Collection<mixed>\|null given#'
+        
+        # Resource caching returns AbstractResource but methods return specific types (intentional)
+        - '#Method Recharge\\RechargeClient::(customers|subscriptions|orders|charges|addresses|products|store)\(\) should return .+ but returns .+AbstractResource#'
+    
+    # Exclude patterns
+    excludePaths:
+        - tests/bootstrap.php
