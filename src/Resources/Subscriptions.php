@@ -6,6 +6,7 @@ namespace Recharge\Resources;
 
 use Recharge\Data\Subscription;
 use Recharge\Enums\ApiVersion;
+use Recharge\Enums\Sort\SubscriptionSort;
 use Recharge\RechargeClient;
 use Recharge\Requests\CreateSubscriptionData;
 use Recharge\Requests\UpdateSubscriptionData;
@@ -38,14 +39,35 @@ class Subscriptions extends AbstractResource
      *
      * Returns a Paginator that automatically fetches the next page when iterating.
      * Supports cursor-based pagination with limit, status, and customer_id filters.
+     * Supports sorting via sort_by parameter (SubscriptionSort enum or string).
      *
-     * @param array<string, mixed> $queryParams Query parameters (limit, status, customer_id, cursor, etc.)
+     * @param array<string, mixed> $queryParams Query parameters (limit, status, customer_id, cursor, sort_by, etc.)
+     *                                           sort_by can be a SubscriptionSort enum or a string value
      * @return Paginator<Subscription> Paginator instance for iterating subscriptions
      * @throws \Recharge\Exceptions\RechargeException
+     * @throws \InvalidArgumentException If sort_by value is invalid
      * @see https://developer.rechargepayments.com/2021-11/subscriptions#list-subscriptions
      */
     public function list(array $queryParams = []): Paginator
     {
+        // Convert enum to string if provided
+        if (isset($queryParams['sort_by']) && $queryParams['sort_by'] instanceof SubscriptionSort) {
+            $queryParams['sort_by'] = $queryParams['sort_by']->value;
+        }
+
+        // Validate sort_by string if provided
+        if (isset($queryParams['sort_by']) && is_string($queryParams['sort_by'])) {
+            if (SubscriptionSort::tryFromString($queryParams['sort_by']) === null) {
+                throw new \InvalidArgumentException(
+                    sprintf(
+                        'Invalid sort_by value "%s". Allowed values: %s',
+                        $queryParams['sort_by'],
+                        implode(', ', array_column(SubscriptionSort::cases(), 'value'))
+                    )
+                );
+            }
+        }
+
         return new Paginator(
             client: $this->client,
             endpoint: $this->endpoint,

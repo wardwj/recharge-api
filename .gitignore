@@ -28,5 +28,10 @@ composer.lock
 # Environment
 .env
 .env.local
-.env.*.local# Logs
+.env.*.local
+
+# Logs
 *.log
+
+# Temporary test scripts (may contain API tokens)
+/var/

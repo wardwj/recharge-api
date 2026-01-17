@@ -51,6 +51,74 @@ foreach ($client->customers()->list() as $customer) {
 foreach ($client->subscriptions()->list(['status' => 'ACTIVE']) as $sub) {
     // Process active subscriptions
 }
+
+// With sorting (using enum - recommended)
+use Recharge\Enums\Sort\SubscriptionSort;
+
+foreach ($client->subscriptions()->list(['sort_by' => SubscriptionSort::CREATED_AT_DESC]) as $sub) {
+    // Subscriptions sorted by creation date (newest first)
+}
+
+// With sorting (using string - also supported)
+foreach ($client->subscriptions()->list(['sort_by' => 'created_at-desc']) as $sub) {
+    // Subscriptions sorted by creation date (newest first)
+}
+```
+
+### Sorting
+
+The SDK supports sorting for list operations using type-safe enums or strings. Using enums is recommended for better IDE support and type safety.
+
+**Available Sort Enums:**
+- `SubscriptionSort` - For subscriptions
+- `ChargeSort` - For charges
+- `OrderSort` - For orders
+- `CustomerSort` - For customers
+
+**Subscriptions (`SubscriptionSort`):**
+- `SubscriptionSort::ID_ASC`, `SubscriptionSort::ID_DESC` (default)
+- `SubscriptionSort::CREATED_AT_ASC`, `SubscriptionSort::CREATED_AT_DESC`
+- `SubscriptionSort::UPDATED_AT_ASC`, `SubscriptionSort::UPDATED_AT_DESC`
+
+**Charges (`ChargeSort`):**
+- `ChargeSort::ID_ASC`, `ChargeSort::ID_DESC` (default)
+- `ChargeSort::CREATED_AT_ASC`, `ChargeSort::CREATED_AT_DESC`
+- `ChargeSort::UPDATED_AT_ASC`, `ChargeSort::UPDATED_AT_DESC`
+- `ChargeSort::SCHEDULED_AT_ASC`, `ChargeSort::SCHEDULED_AT_DESC`
+
+**Orders (`OrderSort`):**
+- `OrderSort::ID_ASC`, `OrderSort::ID_DESC` (default)
+- `OrderSort::CREATED_AT_ASC`, `OrderSort::CREATED_AT_DESC`
+- `OrderSort::UPDATED_AT_ASC`, `OrderSort::UPDATED_AT_DESC`
+- `OrderSort::SHIPPED_DATE_ASC`, `OrderSort::SHIPPED_DATE_DESC`
+- `OrderSort::SHIPPING_DATE_ASC`, `OrderSort::SHIPPING_DATE_DESC` (deprecated)
+
+**Customers (`CustomerSort`):**
+- `CustomerSort::ID_ASC`, `CustomerSort::ID_DESC` (default)
+- `CustomerSort::CREATED_AT_ASC`, `CustomerSort::CREATED_AT_DESC`
+- `CustomerSort::UPDATED_AT_ASC`, `CustomerSort::UPDATED_AT_DESC`
+
+```php
+use Recharge\Enums\Sort\SubscriptionSort;
+use Recharge\Enums\Sort\ChargeSort;
+
+// Using enums (recommended)
+foreach ($client->subscriptions()->list(['sort_by' => SubscriptionSort::CREATED_AT_DESC]) as $sub) {
+    // ...
+}
+
+// Combine sorting with filters
+foreach ($client->charges()->list([
+    'status' => 'queued',
+    'sort_by' => ChargeSort::SCHEDULED_AT_ASC
+]) as $charge) {
+    // Queued charges sorted by scheduled date (earliest first)
+}
+
+// String values also work (for backward compatibility)
+foreach ($client->subscriptions()->list(['sort_by' => 'created_at-desc']) as $sub) {
+    // ...
+}
 ```
 
 ### Get Single Resource

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Recharge\Resources;
 
 use Recharge\Data\Customer;
+use Recharge\Enums\Sort\CustomerSort;
 use Recharge\Support\Paginator;
 
 /**
@@ -28,14 +29,35 @@ class Customers extends AbstractResource
      *
      * Returns a Paginator that automatically fetches the next page when iterating.
      * Supports filtering by created_at, updated_at, email, and more.
+     * Supports sorting via sort_by parameter (CustomerSort enum or string).
      *
-     * @param array<string, mixed> $queryParams Query parameters (limit, created_at_min, updated_at_min, email, etc.)
+     * @param array<string, mixed> $queryParams Query parameters (limit, created_at_min, updated_at_min, email, sort_by, etc.)
+     *                                           sort_by can be a CustomerSort enum or a string value
      * @return Paginator<Customer> Paginator instance for iterating customers
      * @throws \Recharge\Exceptions\RechargeException
+     * @throws \InvalidArgumentException If sort_by value is invalid
      * @see https://developer.rechargepayments.com/2021-11/customers#list-customers
      */
     public function list(array $queryParams = []): Paginator
     {
+        // Convert enum to string if provided
+        if (isset($queryParams['sort_by']) && $queryParams['sort_by'] instanceof CustomerSort) {
+            $queryParams['sort_by'] = $queryParams['sort_by']->value;
+        }
+
+        // Validate sort_by string if provided
+        if (isset($queryParams['sort_by']) && is_string($queryParams['sort_by'])) {
+            if (CustomerSort::tryFromString($queryParams['sort_by']) === null) {
+                throw new \InvalidArgumentException(
+                    sprintf(
+                        'Invalid sort_by value "%s". Allowed values: %s',
+                        $queryParams['sort_by'],
+                        implode(', ', array_column(CustomerSort::cases(), 'value'))
+                    )
+                );
+            }
+        }
+
         return new Paginator(
             client: $this->client,
             endpoint: $this->endpoint,
