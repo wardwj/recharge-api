@@ -10,6 +10,7 @@ use Recharge\Data\Bundle;
 use Recharge\Data\Charge;
 use Recharge\Data\Checkout;
 use Recharge\Data\Collection;
+use Recharge\Data\Credit;
 use Recharge\Data\Customer;
 use Recharge\Data\Discount;
 use Recharge\Data\Order;
@@ -592,5 +593,88 @@ class DTOTest extends TestCase
         $this->assertNull($collection->description);
         $this->assertNull($collection->type);
         $this->assertNull($collection->sortOrder);
+    }
+
+    // Credit Tests
+    public function testCreditParsesBasicResponse(): void
+    {
+        $data = [
+            'id' => 1,
+            'customer_id' => 123,
+            'amount' => '25.00',
+            'currency' => 'USD',
+            'note' => 'Promotional credit',
+            'created_at' => '2024-01-01T00:00:00Z',
+            'updated_at' => '2024-01-01T00:00:00Z',
+        ];
+
+        $credit = Credit::fromArray($data);
+
+        $this->assertEquals(1, $credit->id);
+        $this->assertEquals(123, $credit->customerId);
+        $this->assertEquals('25.00', $credit->amount);
+        $this->assertEquals('USD', $credit->currency);
+        $this->assertEquals('Promotional credit', $credit->note);
+        $this->assertNotNull($credit->createdAt);
+        $this->assertNotNull($credit->updatedAt);
+    }
+
+    public function testCreditHandlesFloatAmount(): void
+    {
+        $data = [
+            'id' => 2,
+            'customer_id' => 456,
+            'amount' => 50.50,
+            'currency' => 'USD',
+        ];
+
+        $credit = Credit::fromArray($data);
+
+        $this->assertEquals(2, $credit->id);
+        $this->assertEquals(456, $credit->customerId);
+        $this->assertEquals(50.50, $credit->amount);
+        $this->assertEquals('USD', $credit->currency);
+    }
+
+    public function testCreditHandlesNullFields(): void
+    {
+        $data = [
+            'id' => 3,
+            'customer_id' => 789,
+        ];
+
+        $credit = Credit::fromArray($data);
+
+        $this->assertEquals(3, $credit->id);
+        $this->assertEquals(789, $credit->customerId);
+        $this->assertNull($credit->amount);
+        $this->assertNull($credit->currency);
+        $this->assertNull($credit->note);
+        $this->assertNull($credit->createdAt);
+        $this->assertNull($credit->updatedAt);
+    }
+
+    public function testCreditToArray(): void
+    {
+        $data = [
+            'id' => 1,
+            'customer_id' => 123,
+            'amount' => '25.00',
+            'currency' => 'USD',
+            'note' => 'Promotional credit',
+            'created_at' => '2024-01-01T00:00:00Z',
+            'updated_at' => '2024-01-01T00:00:00Z',
+        ];
+
+        $credit = Credit::fromArray($data);
+        $array = $credit->toArray();
+
+        $this->assertEquals(1, $array['id']);
+        $this->assertEquals(123, $array['customer_id']);
+        $this->assertEquals('25.00', $array['amount']);
+        $this->assertEquals('USD', $array['currency']);
+        $this->assertEquals('Promotional credit', $array['note']);
+        $this->assertStringContainsString('2024-01-01', $array['created_at']);
+        $this->assertStringContainsString('2024-01-01', $array['updated_at']);
     }
 }

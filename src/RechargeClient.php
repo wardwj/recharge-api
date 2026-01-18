@@ -39,7 +39,7 @@ class RechargeClient implements ClientInterface, LoggerAwareInterface
     private RechargeConfig $config;
 
     /**
-     * @var array<string, Resources\AbstractResource|Resources\Customers|Resources\Subscriptions|Resources\Orders|Resources\Charges|Resources\Addresses|Resources\Products|Resources\Discounts|Resources\Bundles|Resources\Checkouts|Resources\Collections|Resources\Store> Cached resource instances
+     * @var array<string, Resources\AbstractResource|Resources\Customers|Resources\Subscriptions|Resources\Orders|Resources\Charges|Resources\Addresses|Resources\Products|Resources\Discounts|Resources\Bundles|Resources\Checkouts|Resources\Collections|Resources\Credits|Resources\Store> Cached resource instances
      */
     private array $resources = [];
 
@@ -332,6 +332,21 @@ class RechargeClient implements ClientInterface, LoggerAwareInterface
 
         /** @var Resources\Collections */
         return $this->resources['collections'];
+    }
+
+    /**
+     * Get Credits resource instance
+     *
+     * @return Resources\Credits Credits resource
+     */
+    public function credits(): Resources\Credits
+    {
+        if (!isset($this->resources['credits'])) {
+            $this->resources['credits'] = new Resources\Credits($this);
+        }
+
+        /** @var Resources\Credits */
+        return $this->resources['credits'];
     }
 
     /**

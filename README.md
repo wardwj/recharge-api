@@ -395,6 +395,40 @@ foreach ($client->collections()->listProducts(123) as $product) {
 $client->collections()->deleteProductsBulk(123, [456, 789, 101]);
 ```
 
+### Credits
+
+```php
+// List credits
+foreach ($client->credits()->list() as $credit) {
+    echo "Credit ID: {$credit->id}, Amount: {$credit->amount}\n";
+}
+
+// Filter by customer
+foreach ($client->credits()->list(['customer_id' => 123]) as $credit) {
+    // Credits for a specific customer
+}
+
+// Get a credit
+$credit = $client->credits()->get(123);
+
+// Create a credit
+$credit = $client->credits()->create([
+    'customer_id' => 123,
+    'amount' => 25.00,
+    'currency' => 'USD',
+    'note' => 'Promotional credit',
+]);
+
+// Update a credit
+$client->credits()->update(123, [
+    'amount' => 50.00,
+    'note' => 'Updated promotional credit',
+]);
+
+// Delete a credit
+$client->credits()->delete(123);
+```
+
 ## API Version
 
 ```php
