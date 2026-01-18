@@ -16,6 +16,7 @@ use Recharge\Data\Discount;
 use Recharge\Data\Metafield;
 use Recharge\Data\OneTime;
 use Recharge\Data\Order;
+use Recharge\Data\Product;
 use Recharge\Data\Subscription;
 use Recharge\Enums\AppliesToProductType;
 use Recharge\Enums\ChargeStatus;
@@ -911,5 +912,131 @@ class DTOTest extends TestCase
         $this->assertEquals('29.99', $array['price']);
         $this->assertEquals('One-Time Product', $array['title']);
         $this->assertEquals('Variant Title', $array['variant_title']);
+    }
+
+    // Product Tests
+    public function testProductParsesVersion2021_01Response(): void
+    {
+        $data = [
+            'id' => 123,
+            'title' => 'Coffee Product',
+            'handle' => 'coffee-product',
+            'shopify_product_id' => 456,
+            'subscription_defaults' => [
+                'charge_interval_frequency' => 1,
+                'order_interval_unit' => 'month',
+            ],
+            'discount_amount' => 5.00,
+            'discount_type' => 'percentage',
+            'created_at' => '2024-01-01T00:00:00Z',
+            'updated_at' => '2024-01-10T00:00:00Z',
+        ];
+
+        $product = Product::fromArray($data);
+
+        $this->assertEquals(123, $product->id);
+        $this->assertEquals('Coffee Product', $product->title);
+        $this->assertEquals('coffee-product', $product->handle);
+        $this->assertEquals(456, $product->shopifyProductId);
+        $this->assertIsArray($product->subscriptionDefaults);
+        $this->assertEquals('5', $product->discountAmount);
+        $this->assertEquals('percentage', $product->discountType);
+        $this->assertNotNull($product->createdAt);
+        $this->assertNotNull($product->updatedAt);
+    }
+
+    public function testProductParsesVersion2021_11Response(): void
+    {
+        $data = [
+            'id' => 123,
+            'external_product_id' => 'prod_abc123',
+            'title' => 'Coffee Product',
+            'vendor' => 'Coffee Co',
+            'description' => 'Premium coffee subscription',
+            'requires_shipping' => true,
+            'published_at' => '2024-01-01T00:00:00Z',
+            'images' => [
+                [
+                    'small' => 'https://example.com/small.jpg',
+                    'medium' => 'https://example.com/medium.jpg',
+                ],
+            ],
+            'variants' => [
+                [
+                    'external_variant_id' => 'var_123',
+                    'title' => '500g Bag',
+                    'price' => '29.99',
+                ],
+            ],
+            'created_at' => '2024-01-01T00:00:00Z',
+        ];
+
+        $product = Product::fromArray($data);
+
+        $this->assertEquals(123, $product->id);
+        $this->assertEquals('prod_abc123', $product->externalProductId);
+        $this->assertEquals('Coffee Product', $product->title);
+        $this->assertEquals('Coffee Co', $product->vendor);
+        $this->assertEquals('Premium coffee subscription', $product->description);
+        $this->assertTrue($product->requiresShipping);
+        $this->assertNotNull($product->publishedAt);
+        $this->assertIsArray($product->images);
+        $this->assertIsArray($product->variants);
+    }
+
+    public function testProductHandlesNullFields(): void
+    {
+        $data = [
+            'id' => 1,
+        ];
+
+        $product = Product::fromArray($data);
+
+        $this->assertEquals(1, $product->id);
+        $this->assertNull($product->externalProductId);
+        $this->assertNull($product->title);
+        $this->assertNull($product->vendor);
+        $this->assertNull($product->description);
+        $this->assertNull($product->images);
+        $this->assertNull($product->variants);
+    }
+
+    public function testProductGetIdentifier(): void
+    {
+        // With external_product_id (2021-11)
+        $product1 = new Product(
+            id: 0,
+            externalProductId: 'prod_abc123',
+            title: 'Test Product'
+        );
+        $this->assertEquals('prod_abc123', $product1->getIdentifier());
+
+        // Without external_product_id (2021-01)
+        $product2 = new Product(
+            id: 123,
+            title: 'Test Product'
+        );
+        $this->assertEquals(123, $product2->getIdentifier());
+    }
+
+    public function testProductToArray(): void
+    {
+        $product = new Product(
+            id: 123,
+            externalProductId: 'prod_abc123',
+            title: 'Coffee Product',
+            vendor: 'Coffee Co',
+            description: 'Premium coffee',
+            requiresShipping: true
+        );
+
+        $array = $product->toArray();
+
+        $this->assertEquals(123, $array['id']);
+        $this->assertEquals('prod_abc123', $array['external_product_id']);
+        $this->assertEquals('Coffee Product', $array['title']);
+        $this->assertEquals('Coffee Co', $array['vendor']);
+        $this->assertEquals('Premium coffee', $array['description']);
+        $this->assertTrue($array['requires_shipping']);
     }
 }

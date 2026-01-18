@@ -11,6 +11,7 @@ use Recharge\Enums\Sort\CustomerSort;
 use Recharge\Enums\Sort\MetafieldSort;
 use Recharge\Enums\Sort\OneTimeSort;
 use Recharge\Enums\Sort\OrderSort;
+use Recharge\Enums\Sort\ProductSort;
 use Recharge\Enums\Sort\SubscriptionSort;
 
 class EnumSortTest extends TestCase
@@ -160,5 +161,35 @@ class EnumSortTest extends TestCase
         $this->assertEquals(OneTimeSort::CREATED_AT_ASC, OneTimeSort::tryFromString('created_at-asc'));
         $this->assertEquals(OneTimeSort::UPDATED_AT_DESC, OneTimeSort::tryFromString('updated_at-desc'));
         $this->assertNull(OneTimeSort::tryFromString('invalid-sort'));
+    }
+
+    public function testProductSortEnum(): void
+    {
+        $this->assertEquals('id-desc', ProductSort::ID_DESC->value);
+        $this->assertEquals('title-asc', ProductSort::TITLE_ASC->value);
+        $this->assertEquals('title-desc', ProductSort::TITLE_DESC->value);
+        $this->assertEquals('created_at-asc', ProductSort::CREATED_AT_ASC->value);
+        $this->assertEquals('updated_at-desc', ProductSort::UPDATED_AT_DESC->value);
+    }
+
+    public function testProductSortDefault(): void
+    {
+        $default = ProductSort::default();
+        $this->assertEquals(ProductSort::ID_DESC, $default);
+    }
+
+    public function testProductSortIncludesTitle(): void
+    {
+        $values = array_column(ProductSort::cases(), 'value');
+        $this->assertContains('title-asc', $values);
+        $this->assertContains('title-desc', $values);
+    }
+
+    public function testProductSortTryFromString(): void
+    {
+        $this->assertEquals(ProductSort::ID_DESC, ProductSort::tryFromString('id-desc'));
+        $this->assertEquals(ProductSort::TITLE_ASC, ProductSort::tryFromString('title-asc'));
+        $this->assertEquals(ProductSort::CREATED_AT_DESC, ProductSort::tryFromString('created_at-desc'));
+        $this->assertNull(ProductSort::tryFromString('invalid-sort'));
     }
 }

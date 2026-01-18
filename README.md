@@ -77,6 +77,8 @@ The SDK supports sorting for list operations using type-safe enums or strings. U
 - `DiscountSort` - For discounts
 - `BundleSort` - For bundles
 - `MetafieldSort` - For metafields (2021-01 only)
+- `OneTimeSort` - For one-times
+- `ProductSort` - For products
 
 **Subscriptions (`SubscriptionSort`):**
 - `SubscriptionSort::ID_ASC`, `SubscriptionSort::ID_DESC` (default)
@@ -119,6 +121,12 @@ The SDK supports sorting for list operations using type-safe enums or strings. U
 - `OneTimeSort::ID_ASC`, `OneTimeSort::ID_DESC` (default)
 - `OneTimeSort::CREATED_AT_ASC`, `OneTimeSort::CREATED_AT_DESC`
 - `OneTimeSort::UPDATED_AT_ASC`, `OneTimeSort::UPDATED_AT_DESC`
+
+**Products (`ProductSort`):**
+- `ProductSort::ID_ASC`, `ProductSort::ID_DESC` (default)
+- `ProductSort::CREATED_AT_ASC`, `ProductSort::CREATED_AT_DESC`
+- `ProductSort::UPDATED_AT_ASC`, `ProductSort::UPDATED_AT_DESC`
+- `ProductSort::TITLE_ASC`, `ProductSort::TITLE_DESC`
 
 ```php
 use Recharge\Enums\Sort\SubscriptionSort;
@@ -602,6 +610,75 @@ $client->oneTimes()->delete(123);
 - **2021-01**: Creating onetimes requires `address_id` in the path: `POST /addresses/{address_id}/onetimes`
 - **2021-11**: Creating onetimes uses the standard endpoint: `POST /onetimes` (address_id can be in the body)
 - The SDK automatically handles these differences based on the current API version.
+
+### Products
+
+Products represent items available for subscription in your store.
+
+**Note:** Products in API version 2021-01 are deprecated as of June 30, 2025. The recommended replacement is using Plans in 2021-11.
+
+```php
+// List products
+foreach ($client->products()->list() as $product) {
+    echo "Product: {$product->title}\n";
+}
+
+// With sorting (using enum - recommended)
+use Recharge\Enums\Sort\ProductSort;
+
+foreach ($client->products()->list(['sort_by' => ProductSort::TITLE_ASC]) as $product) {
+    // Products sorted by title (A-Z)
+}
+
+// Filter by external product ID (2021-11)
+foreach ($client->products()->list(['external_product_id' => 'prod_abc123']) as $product) {
+    // Products with specific external ID
+}
+
+// Filter by Shopify product IDs
+foreach ($client->products()->list(['shopify_product_ids' => '123,456']) as $product) {
+    // Products from specific Shopify product IDs
+}
+
+// Get a product
+// In 2021-11, use external_product_id (string)
+// In 2021-01, use numeric id
+$product = $client->products()->get('prod_abc123'); // or get(123) for 2021-01
+
+// Create a product
+$product = $client->products()->create([
+    'title' => 'Coffee Subscription',
+    'vendor' => 'Coffee Co',
+    'description' => 'Premium coffee subscription',
+    'requires_shipping' => true,
+    'variants' => [
+        [
+            'external_variant_id' => 'var_123',
+            'title' => '500g Bag',
+            'price' => '29.99',
+        ],
+    ],
+]);
+
+// Update a product
+$client->products()->update('prod_abc123', [
+    'title' => 'Updated Coffee Subscription',
+    'description' => 'Updated description',
+]);
+
+// Delete a product
+$client->products()->delete('prod_abc123');
+
+// Get count of products (requires API 2021-01, automatically handled)
+$count = $client->products()->count();
+```
+
+**Version Differences:**
+- **2021-11**: Uses `external_product_id` (string) as identifier for get/update/delete operations
+- **2021-01**: Uses numeric `id` as identifier
+- **2021-11**: Includes fields like `vendor`, `description`, `published_at`, `images`, `options`, `variants`
+- **2021-01**: Includes fields like `shopify_product_id`, `subscription_defaults`, `discount_amount`, `discount_type`
+- The SDK automatically handles identifier differences based on the current API version.
 
 ## API Version
 
