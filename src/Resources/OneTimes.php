@@ -41,6 +41,14 @@ class OneTimes extends AbstractResource
     }
 
     /**
+     * Get the sort enum class for this resource
+     */
+    protected function getSortEnumClass(): ?string
+    {
+        return OneTimeSort::class;
+    }
+
+    /**
      * List all one-times
      *
      * Returns a Paginator that automatically fetches the next page when iterating.
@@ -56,23 +64,7 @@ class OneTimes extends AbstractResource
      */
     public function list(array $queryParams = []): Paginator
     {
-        // Convert enum to string if provided
-        if (isset($queryParams['sort_by']) && $queryParams['sort_by'] instanceof OneTimeSort) {
-            $queryParams['sort_by'] = $queryParams['sort_by']->value;
-        }
-
-        // Validate sort_by string if provided
-        if (isset($queryParams['sort_by']) && is_string($queryParams['sort_by'])) {
-            if (OneTimeSort::tryFromString($queryParams['sort_by']) === null) {
-                throw new \InvalidArgumentException(
-                    sprintf(
-                        'Invalid sort_by value "%s". Allowed values: %s',
-                        $queryParams['sort_by'],
-                        implode(', ', array_column(OneTimeSort::cases(), 'value'))
-                    )
-                );
-            }
-        }
+        $queryParams = $this->validateSort($queryParams);
 
         return new Paginator(
             client: $this->client,

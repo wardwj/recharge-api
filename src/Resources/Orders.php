@@ -26,6 +26,14 @@ class Orders extends AbstractResource
     protected string $endpoint = '/orders';
 
     /**
+     * Get the sort enum class for this resource
+     */
+    protected function getSortEnumClass(): ?string
+    {
+        return OrderSort::class;
+    }
+
+    /**
      * List all orders with automatic pagination
      *
      * Returns a Paginator that automatically fetches the next page when iterating.
@@ -44,27 +52,8 @@ class Orders extends AbstractResource
      */
     public function list(array $queryParams = []): Paginator
     {
-        $needsVersionSwitch = false;
-
-        // Convert enum to string if provided
-        if (isset($queryParams['sort_by']) && $queryParams['sort_by'] instanceof OrderSort) {
-            $queryParams['sort_by'] = $queryParams['sort_by']->value;
-            $needsVersionSwitch = true;
-        }
-
-        // Validate sort_by string if provided
-        if (isset($queryParams['sort_by']) && is_string($queryParams['sort_by'])) {
-            if (OrderSort::tryFromString($queryParams['sort_by']) === null) {
-                throw new \InvalidArgumentException(
-                    sprintf(
-                        'Invalid sort_by value "%s". Allowed values: %s',
-                        $queryParams['sort_by'],
-                        implode(', ', array_column(OrderSort::cases(), 'value'))
-                    )
-                );
-            }
-            $needsVersionSwitch = true;
-        }
+        $queryParams = $this->validateSort($queryParams);
+        $needsVersionSwitch = isset($queryParams['sort_by']);
 
         // Orders sorting requires 2021-01 API version
         // Note: We switch the version and keep it switched since Paginator is lazy

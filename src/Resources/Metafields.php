@@ -27,6 +27,14 @@ class Metafields extends AbstractResource
     protected string $endpoint = '/metafields';
 
     /**
+     * Get the sort enum class for this resource
+     */
+    protected function getSortEnumClass(): ?string
+    {
+        return MetafieldSort::class;
+    }
+
+    /**
      * List all metafields with automatic pagination
      *
      * Returns a Paginator that automatically fetches the next page when iterating.
@@ -46,27 +54,8 @@ class Metafields extends AbstractResource
      */
     public function list(array $queryParams = []): Paginator
     {
-        $needsVersionSwitch = false;
-
-        // Convert enum to string if provided
-        if (isset($queryParams['sort_by']) && $queryParams['sort_by'] instanceof MetafieldSort) {
-            $queryParams['sort_by'] = $queryParams['sort_by']->value;
-            $needsVersionSwitch = true;
-        }
-
-        // Validate sort_by string if provided
-        if (isset($queryParams['sort_by']) && is_string($queryParams['sort_by'])) {
-            if (MetafieldSort::tryFromString($queryParams['sort_by']) === null) {
-                throw new \InvalidArgumentException(
-                    sprintf(
-                        'Invalid sort_by value "%s". Allowed values: %s',
-                        $queryParams['sort_by'],
-                        implode(', ', array_column(MetafieldSort::cases(), 'value'))
-                    )
-                );
-            }
-            $needsVersionSwitch = true;
-        }
+        $queryParams = $this->validateSort($queryParams);
+        $needsVersionSwitch = isset($queryParams['sort_by']);
 
         // Metafields sorting requires 2021-01 API version
         // Note: We switch the version and keep it switched since Paginator is lazy

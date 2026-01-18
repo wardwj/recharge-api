@@ -6,6 +6,7 @@ namespace Recharge\Resources;
 
 use Recharge\Contracts\ResourceInterface;
 use Recharge\RechargeClient;
+use Recharge\Support\SortValidator;
 
 /**
  * Abstract base class for all Recharge API resources
@@ -72,5 +73,47 @@ abstract class AbstractResource implements ResourceInterface
     protected function normalizeId(int|string $id): int
     {
         return (int) $id;
+    }
+
+    /**
+     * Get the sort enum class for this resource
+     *
+     * Override this method in child classes to return the sort enum class name.
+     * Return null if the resource doesn't support sorting.
+     *
+     * @return class-string<\BackedEnum>|null The sort enum class name, or null if not supported
+     */
+    protected function getSortEnumClass(): ?string
+    {
+        return null;
+    }
+
+    /**
+     * Validate sort_by parameter in query params
+     *
+     * Accepts a sort enum instance or string, converts enum to string,
+     * and validates the string value against the enum class.
+     * Auto-determines the enum class from the resource's getSortEnumClass() method.
+     *
+     * @param array<string, mixed> $queryParams Query parameters (may be modified)
+     * @return array<string, mixed> Modified query parameters with validated sort_by
+     * @throws \InvalidArgumentException If sort_by value is invalid or resource doesn't support sorting
+     */
+    protected function validateSort(array $queryParams): array
+    {
+        $enumClass = $this->getSortEnumClass();
+
+        if ($enumClass === null) {
+            // If resource doesn't support sorting but sort_by is provided, throw error
+            if (isset($queryParams['sort_by'])) {
+                throw new \InvalidArgumentException(
+                    sprintf('Resource %s does not support sorting', static::class)
+                );
+            }
+
+            return $queryParams;
+        }
+
+        return SortValidator::normalizeAndValidate($queryParams, $enumClass);
     }
 }
