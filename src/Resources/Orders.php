@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Recharge\Resources;
 
 use Recharge\Data\Order;
+use Recharge\Enums\ApiVersion;
 use Recharge\Enums\Sort\OrderSort;
 use Recharge\Support\Paginator;
 
@@ -143,5 +144,29 @@ class Orders extends AbstractResource
         $response = $this->client->post($this->buildEndpoint("{$orderId}/delay"), $data);
 
         return Order::fromArray($response['order'] ?? []);
+    }
+
+    /**
+     * Get count of orders
+     *
+     * Count endpoint is only available in API version 2021-01.
+     * This method automatically switches to 2021-01, makes the request, then restores the original version.
+     *
+     * @param array<string, mixed> $queryParams Query parameters for filtering (status, customer_id, created_at_min, etc.)
+     * @return int Count of orders matching the filters
+     * @throws \Recharge\Exceptions\RechargeException
+     * @see https://developer.rechargepayments.com/2021-01/orders#count-orders
+     */
+    public function count(array $queryParams = []): int
+    {
+        $context = $this->switchToVersion(ApiVersion::V2021_01);
+
+        try {
+            $response = $this->client->get($this->buildEndpoint('count'), $queryParams);
+
+            return (int) ($response['count'] ?? 0);
+        } finally {
+            $context->restore();
+        }
     }
 }

@@ -78,4 +78,16 @@ $client->metafields()->update(123, [
 $client->metafields()->delete(123);
 ```
 
+## Get Count
+
+```php
+// Get count of metafields (requires API 2021-01, automatically handled)
+$count = $client->metafields()->count([
+    'owner_resource' => 'customer',
+    'namespace' => 'custom',
+]);
+```
+
+**Note:** Count endpoint is only available in API version 2021-01.
+
 See [Sorting Documentation](sorting.md) for available sort options.

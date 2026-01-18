@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Recharge\Resources;
 
 use Recharge\Data\Customer;
+use Recharge\Enums\ApiVersion;
 use Recharge\Enums\Sort\CustomerSort;
 use Recharge\Support\Paginator;
 
@@ -202,5 +203,54 @@ class Customers extends AbstractResource
         );
 
         return $response;
+    }
+
+    /**
+     * Get count of customers
+     *
+     * Count endpoint is only available in API version 2021-01.
+     * This method automatically switches to 2021-01, makes the request, then restores the original version.
+     *
+     * @param array<string, mixed> $queryParams Query parameters for filtering (email, created_at_min, etc.)
+     * @return int Count of customers matching the filters
+     * @throws \Recharge\Exceptions\RechargeException
+     * @see https://developer.rechargepayments.com/2021-01/customers#count-customers
+     */
+    public function count(array $queryParams = []): int
+    {
+        $context = $this->switchToVersion(ApiVersion::V2021_01);
+
+        try {
+            $response = $this->client->get($this->buildEndpoint('count'), $queryParams);
+
+            return (int) ($response['count'] ?? 0);
+        } finally {
+            $context->restore();
+        }
+    }
+
+    /**
+     * Retrieve a customer's payment sources
+     *
+     * Returns payment sources (payment methods) for a customer.
+     * Only available in API version 2021-01. In 2021-11, use the PaymentMethods resource instead.
+     * This method automatically switches to 2021-01, makes the request, then restores the original version.
+     *
+     * @param int $customerId Customer ID
+     * @return array<string, mixed> Payment sources data
+     * @throws \Recharge\Exceptions\RechargeException
+     * @see https://developer.rechargepayments.com/2021-01/customers#retrieve-a-customers-payment-sources
+     */
+    public function getPaymentSources(int $customerId): array
+    {
+        $context = $this->switchToVersion(ApiVersion::V2021_01);
+
+        try {
+            $response = $this->client->get($this->buildEndpoint("{$customerId}/payment_sources"));
+
+            return $response['payment_sources'] ?? [];
+        } finally {
+            $context->restore();
+        }
     }
 }

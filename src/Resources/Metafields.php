@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Recharge\Resources;
 
 use Recharge\Data\Metafield;
+use Recharge\Enums\ApiVersion;
 use Recharge\Enums\Sort\MetafieldSort;
 use Recharge\Support\Paginator;
 
@@ -123,5 +124,29 @@ class Metafields extends AbstractResource
     public function delete(int $metafieldId): void
     {
         $this->client->delete($this->buildEndpoint((string) $metafieldId));
+    }
+
+    /**
+     * Get count of metafields
+     *
+     * Count endpoint is only available in API version 2021-01.
+     * This method automatically switches to 2021-01, makes the request, then restores the original version.
+     *
+     * @param array<string, mixed> $queryParams Query parameters for filtering (owner_resource, owner_id, namespace, key, etc.)
+     * @return int Count of metafields matching the filters
+     * @throws \Recharge\Exceptions\RechargeException
+     * @see https://developer.rechargepayments.com/2021-01/metafields#count-metafields
+     */
+    public function count(array $queryParams = []): int
+    {
+        $context = $this->switchToVersion(ApiVersion::V2021_01);
+
+        try {
+            $response = $this->client->get($this->buildEndpoint('count'), $queryParams);
+
+            return (int) ($response['count'] ?? 0);
+        } finally {
+            $context->restore();
+        }
     }
 }

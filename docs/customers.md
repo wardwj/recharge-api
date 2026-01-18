@@ -88,4 +88,18 @@ $client->customers()->sendNotification(
 
 Note: Both templates are supported in API versions 2021-01 and 2021-11.
 
+## Get Payment Sources
+
+```php
+// Get payment sources for a customer (requires API 2021-01, automatically handled)
+$paymentSources = $client->customers()->getPaymentSources(123);
+
+// Note: In API version 2021-11, use the PaymentMethods resource instead
+foreach ($paymentSources as $paymentSource) {
+    // Process payment source
+}
+```
+
+**Note:** Payment sources endpoint is only available in API version 2021-01. In 2021-11, use `$client->paymentMethods()->list(['customer_id' => 123])` instead.
+
 See [Sorting Documentation](sorting.md) for available sort options.

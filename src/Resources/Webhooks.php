@@ -123,4 +123,20 @@ class Webhooks extends AbstractResource
     {
         $this->client->delete($this->buildEndpoint((string) $webhookId));
     }
+
+    /**
+     * Test a webhook
+     *
+     * Sends a test webhook event to the webhook URL to verify it's working correctly.
+     *
+     * @param int $webhookId Webhook ID
+     * @return array<string, mixed> Test response data
+     * @throws \Recharge\Exceptions\RechargeException
+     * @see https://developer.rechargepayments.com/2021-11/webhooks#test-a-webhook
+     * @see https://developer.rechargepayments.com/2021-01/webhooks#test-a-webhook
+     */
+    public function test(int $webhookId): array
+    {
+        return $this->client->post($this->buildEndpoint("{$webhookId}/test"));
+    }
 }

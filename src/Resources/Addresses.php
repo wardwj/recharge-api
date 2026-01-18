@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Recharge\Resources;
 
 use Recharge\Data\Address;
+use Recharge\Enums\ApiVersion;
 use Recharge\Support\Paginator;
 
 /**
@@ -105,5 +106,51 @@ class Addresses extends AbstractResource
     public function delete(int $addressId): void
     {
         $this->client->delete($this->buildEndpoint((string) $addressId));
+    }
+
+    /**
+     * Get count of addresses
+     *
+     * Count endpoint is only available in API version 2021-01.
+     * This method automatically switches to 2021-01, makes the request, then restores the original version.
+     *
+     * @param array<string, mixed> $queryParams Query parameters for filtering (customer_id, created_at_min, etc.)
+     * @return int Count of addresses matching the filters
+     * @throws \Recharge\Exceptions\RechargeException
+     * @see https://developer.rechargepayments.com/2021-01/addresses#count-addresses
+     */
+    public function count(array $queryParams = []): int
+    {
+        $context = $this->switchToVersion(ApiVersion::V2021_01);
+
+        try {
+            $response = $this->client->get($this->buildEndpoint('count'), $queryParams);
+
+            return (int) ($response['count'] ?? 0);
+        } finally {
+            $context->restore();
+        }
+    }
+
+    /**
+     * Validate an address
+     *
+     * Validates an address before creating it. Only available in API version 2021-01.
+     * This method automatically switches to 2021-01, makes the request, then restores the original version.
+     *
+     * @param array<string, mixed> $data Address data to validate (address1, city, province, zip, country, etc.)
+     * @return array<string, mixed> Validation response data
+     * @throws \Recharge\Exceptions\RechargeException
+     * @see https://developer.rechargepayments.com/2021-01/addresses#validate-an-address
+     */
+    public function validate(array $data): array
+    {
+        $context = $this->switchToVersion(ApiVersion::V2021_01);
+
+        try {
+            return $this->client->post($this->buildEndpoint('validate'), $data);
+        } finally {
+            $context->restore();
+        }
     }
 }

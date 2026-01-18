@@ -29,6 +29,27 @@ $address = $client->addresses()->get(123);
 $count = $client->addresses()->count(['customer_id' => 123]);
 ```
 
+## Validate Address
+
+```php
+// Validate an address before creating (requires API 2021-01, automatically handled)
+$validation = $client->addresses()->validate([
+    'address1' => '123 Main St',
+    'city' => 'New York',
+    'province' => 'NY',
+    'zip' => '10001',
+    'country' => 'United States',
+    'country_code' => 'US',
+]);
+
+// Check validation results
+if (isset($validation['valid']) && $validation['valid']) {
+    // Address is valid, proceed with creation
+}
+```
+
+**Note:** Address validation is only available in API version 2021-01.
+
 ## Create Address
 
 ```php

@@ -189,7 +189,7 @@ class Subscriptions extends AbstractResource
      * Get count of subscriptions
      *
      * Count endpoint is only available in API version 2021-01.
-     * This method temporarily switches to 2021-01, makes the request, then restores the original version.
+     * This method automatically switches to 2021-01, makes the request, then restores the original version.
      *
      * @param array<string, mixed> $queryParams Query parameters for filtering (status, customer_id, etc.)
      * @return int Count of subscriptions matching the filters
@@ -198,17 +198,97 @@ class Subscriptions extends AbstractResource
      */
     public function count(array $queryParams = []): int
     {
-        $originalVersion = $this->client->getApiVersion();
+        $context = $this->switchToVersion(ApiVersion::V2021_01);
 
         try {
-            // Count endpoint requires 2021-01 API version
-            $this->client->setApiVersion(ApiVersion::V2021_01);
             $response = $this->client->get($this->buildEndpoint('count'), $queryParams);
 
             return (int) ($response['count'] ?? 0);
         } finally {
-            // Restore original API version
-            $this->client->setApiVersion($originalVersion);
+            $context->restore();
+        }
+    }
+
+    /**
+     * Bulk create subscriptions for an address
+     *
+     * Creates multiple subscriptions for a specific address in a single request.
+     * Only available in API version 2021-01.
+     * This method automatically switches to 2021-01, makes the request, then restores the original version.
+     *
+     * @param int $addressId Address ID
+     * @param array<int, array<string, mixed>> $subscriptions Array of subscription data arrays to create
+     * @return array<string, mixed> Response data containing created subscriptions
+     * @throws \Recharge\Exceptions\RechargeException
+     * @see https://developer.rechargepayments.com/2021-01/subscriptions#bulk-create-subscriptions
+     */
+    public function bulkCreate(int $addressId, array $subscriptions): array
+    {
+        $context = $this->switchToVersion(ApiVersion::V2021_01);
+
+        try {
+            // Endpoint is /addresses/{id}/subscriptions-bulk, not /subscriptions/...
+            $endpoint = "/addresses/{$addressId}/subscriptions-bulk";
+
+            return $this->client->post($endpoint, ['subscriptions' => $subscriptions]);
+        } finally {
+            $context->restore();
+        }
+    }
+
+    /**
+     * Bulk update subscriptions for an address
+     *
+     * Updates multiple subscriptions for a specific address in a single request.
+     * Only available in API version 2021-01.
+     * This method automatically switches to 2021-01, makes the request, then restores the original version.
+     *
+     * @param int $addressId Address ID
+     * @param array<int, array<string, mixed>> $subscriptions Array of subscription data arrays to update (must include id)
+     * @return array<string, mixed> Response data containing updated subscriptions
+     * @throws \Recharge\Exceptions\RechargeException
+     * @see https://developer.rechargepayments.com/2021-01/subscriptions#bulk-update-subscriptions
+     */
+    public function bulkUpdate(int $addressId, array $subscriptions): array
+    {
+        $context = $this->switchToVersion(ApiVersion::V2021_01);
+
+        try {
+            // Endpoint is /addresses/{id}/subscriptions-bulk, not /subscriptions/...
+            $endpoint = "/addresses/{$addressId}/subscriptions-bulk";
+
+            return $this->client->put($endpoint, ['subscriptions' => $subscriptions]);
+        } finally {
+            $context->restore();
+        }
+    }
+
+    /**
+     * Bulk delete subscriptions for an address
+     *
+     * Deletes multiple subscriptions for a specific address in a single request.
+     * Only available in API version 2021-01.
+     * This method automatically switches to 2021-01, makes the request, then restores the original version.
+     *
+     * @param int $addressId Address ID
+     * @param array<int> $subscriptionIds Array of subscription IDs to delete
+     * @return void
+     * @throws \Recharge\Exceptions\RechargeException
+     * @see https://developer.rechargepayments.com/2021-01/subscriptions#bulk-delete-subscriptions
+     */
+    public function bulkDelete(int $addressId, array $subscriptionIds): void
+    {
+        $context = $this->switchToVersion(ApiVersion::V2021_01);
+
+        try {
+            // Endpoint is /addresses/{id}/subscriptions-bulk, not /subscriptions/...
+            // Bulk delete uses DELETE with subscription_ids as query parameter
+            $subscriptionIdsQuery = http_build_query(['subscription_ids' => implode(',', array_map('strval', $subscriptionIds))]);
+            $endpoint = "/addresses/{$addressId}/subscriptions-bulk?{$subscriptionIdsQuery}";
+
+            $this->client->delete($endpoint);
+        } finally {
+            $context->restore();
         }
     }
 }
