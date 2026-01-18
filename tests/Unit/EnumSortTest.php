@@ -8,6 +8,7 @@ use PHPUnit\Framework\TestCase;
 use Recharge\Enums\Sort\BundleSort;
 use Recharge\Enums\Sort\ChargeSort;
 use Recharge\Enums\Sort\CustomerSort;
+use Recharge\Enums\Sort\MetafieldSort;
 use Recharge\Enums\Sort\OrderSort;
 use Recharge\Enums\Sort\SubscriptionSort;
 
@@ -109,5 +110,33 @@ class EnumSortTest extends TestCase
     {
         $default = BundleSort::default();
         $this->assertEquals(BundleSort::ID_DESC, $default);
+    }
+
+    public function testMetafieldSortEnum(): void
+    {
+        $this->assertEquals('id-desc', MetafieldSort::ID_DESC->value);
+        $this->assertEquals('updated_at-asc', MetafieldSort::UPDATED_AT_ASC->value);
+        $this->assertEquals('updated_at-desc', MetafieldSort::UPDATED_AT_DESC->value);
+    }
+
+    public function testMetafieldSortDoesNotIncludeCreatedAt(): void
+    {
+        $values = array_column(MetafieldSort::cases(), 'value');
+        $this->assertNotContains('created_at-asc', $values);
+        $this->assertNotContains('created_at-desc', $values);
+    }
+
+    public function testMetafieldSortDefault(): void
+    {
+        $default = MetafieldSort::default();
+        $this->assertEquals(MetafieldSort::ID_DESC, $default);
+    }
+
+    public function testMetafieldSortTryFromString(): void
+    {
+        $this->assertEquals(MetafieldSort::ID_DESC, MetafieldSort::tryFromString('id-desc'));
+        $this->assertEquals(MetafieldSort::UPDATED_AT_ASC, MetafieldSort::tryFromString('updated_at-asc'));
+        $this->assertNull(MetafieldSort::tryFromString('created_at-asc'));
+        $this->assertNull(MetafieldSort::tryFromString('invalid-sort'));
     }
 }

@@ -39,7 +39,7 @@ class RechargeClient implements ClientInterface, LoggerAwareInterface
     private RechargeConfig $config;
 
     /**
-     * @var array<string, Resources\AbstractResource|Resources\Customers|Resources\Subscriptions|Resources\Orders|Resources\Charges|Resources\Addresses|Resources\Products|Resources\Discounts|Resources\Bundles|Resources\Checkouts|Resources\Collections|Resources\Credits|Resources\Store> Cached resource instances
+     * @var array<string, Resources\AbstractResource|Resources\Customers|Resources\Subscriptions|Resources\Orders|Resources\Charges|Resources\Addresses|Resources\Products|Resources\Discounts|Resources\Bundles|Resources\Checkouts|Resources\Collections|Resources\Credits|Resources\Metafields|Resources\Store> Cached resource instances
      */
     private array $resources = [];
 
@@ -347,6 +347,21 @@ class RechargeClient implements ClientInterface, LoggerAwareInterface
 
         /** @var Resources\Credits */
         return $this->resources['credits'];
+    }
+
+    /**
+     * Get Metafields resource instance
+     *
+     * @return Resources\Metafields Metafields resource
+     */
+    public function metafields(): Resources\Metafields
+    {
+        if (!isset($this->resources['metafields'])) {
+            $this->resources['metafields'] = new Resources\Metafields($this);
+        }
+
+        /** @var Resources\Metafields */
+        return $this->resources['metafields'];
     }
 
     /**

@@ -13,6 +13,7 @@ use Recharge\Data\Collection;
 use Recharge\Data\Credit;
 use Recharge\Data\Customer;
 use Recharge\Data\Discount;
+use Recharge\Data\Metafield;
 use Recharge\Data\Order;
 use Recharge\Data\Subscription;
 use Recharge\Enums\AppliesToProductType;
@@ -676,5 +677,146 @@ class DTOTest extends TestCase
         $this->assertEquals('Promotional credit', $array['note']);
         $this->assertStringContainsString('2024-01-01', $array['created_at']);
         $this->assertStringContainsString('2024-01-01', $array['updated_at']);
+    }
+
+    // Metafield Tests
+    public function testMetafieldParsesBasicResponse(): void
+    {
+        $data = [
+            'id' => 1,
+            'owner_resource' => 'customer',
+            'owner_id' => 123,
+            'namespace' => 'custom',
+            'key' => 'preferred_language',
+            'value' => 'en',
+            'type' => 'single_line_text_field',
+            'description' => 'Customer preferred language',
+            'created_at' => '2024-01-01T00:00:00Z',
+            'updated_at' => '2024-01-01T00:00:00Z',
+        ];
+
+        $metafield = Metafield::fromArray($data);
+
+        $this->assertEquals(1, $metafield->id);
+        $this->assertEquals('customer', $metafield->ownerResource);
+        $this->assertEquals(123, $metafield->ownerId);
+        $this->assertEquals('custom', $metafield->namespace);
+        $this->assertEquals('preferred_language', $metafield->key);
+        $this->assertEquals('en', $metafield->value);
+        $this->assertEquals('single_line_text_field', $metafield->type);
+        $this->assertEquals('Customer preferred language', $metafield->description);
+        $this->assertNotNull($metafield->createdAt);
+        $this->assertNotNull($metafield->updatedAt);
+    }
+
+    public function testMetafieldHandlesNumericValue(): void
+    {
+        $data = [
+            'id' => 2,
+            'owner_resource' => 'subscription',
+            'owner_id' => 456,
+            'namespace' => 'custom',
+            'key' => 'priority',
+            'value' => 5,
+            'type' => 'number_integer',
+        ];
+
+        $metafield = Metafield::fromArray($data);
+
+        $this->assertEquals(2, $metafield->id);
+        $this->assertEquals('subscription', $metafield->ownerResource);
+        $this->assertEquals(456, $metafield->ownerId);
+        $this->assertEquals(5, $metafield->value);
+        $this->assertEquals('number_integer', $metafield->type);
+    }
+
+    public function testMetafieldHandlesJsonStringValue(): void
+    {
+        $data = [
+            'id' => 3,
+            'owner_resource' => 'charge',
+            'owner_id' => 789,
+            'namespace' => 'custom',
+            'key' => 'metadata',
+            'value' => '{"source":"api","version":"1.0"}',
+            'type' => 'json',
+        ];
+
+        $metafield = Metafield::fromArray($data);
+
+        $this->assertEquals(3, $metafield->id);
+        $this->assertIsArray($metafield->value);
+        $this->assertEquals('api', $metafield->value['source']);
+        $this->assertEquals('1.0', $metafield->value['version']);
+    }
+
+    public function testMetafieldHandlesNullFields(): void
+    {
+        $data = [
+            'id' => 4,
+            'owner_resource' => 'customer',
+            'owner_id' => 999,
+            'namespace' => 'custom',
+            'key' => 'notes',
+        ];
+
+        $metafield = Metafield::fromArray($data);
+
+        $this->assertEquals(4, $metafield->id);
+        $this->assertNull($metafield->value);
+        $this->assertNull($metafield->type);
+        $this->assertNull($metafield->description);
+        $this->assertNull($metafield->createdAt);
+        $this->assertNull($metafield->updatedAt);
+    }
+
+    public function testMetafieldToArray(): void
+    {
+        $data = [
+            'id' => 1,
+            'owner_resource' => 'customer',
+            'owner_id' => 123,
+            'namespace' => 'custom',
+            'key' => 'preferred_language',
+            'value' => 'en',
+            'type' => 'single_line_text_field',
+            'description' => 'Customer preferred language',
+            'created_at' => '2024-01-01T00:00:00Z',
+            'updated_at' => '2024-01-01T00:00:00Z',
+        ];
+
+        $metafield = Metafield::fromArray($data);
+        $array = $metafield->toArray();
+
+        $this->assertEquals(1, $array['id']);
+        $this->assertEquals('customer', $array['owner_resource']);
+        $this->assertEquals(123, $array['owner_id']);
+        $this->assertEquals('custom', $array['namespace']);
+        $this->assertEquals('preferred_language', $array['key']);
+        $this->assertEquals('en', $array['value']);
+        $this->assertEquals('single_line_text_field', $array['type']);
+        $this->assertStringContainsString('2024-01-01', $array['created_at']);
+        $this->assertStringContainsString('2024-01-01', $array['updated_at']);
+    }
+
+    public function testMetafieldToArrayWithJsonValue(): void
+    {
+        $metafield = new Metafield(
+            id: 1,
+            ownerResource: 'customer',
+            ownerId: 123,
+            namespace: 'custom',
+            key: 'metadata',
+            value: ['source' => 'api', 'version' => '1.0'],
+            type: 'json'
+        );
+
+        $array = $metafield->toArray();
+
+        $this->assertEquals(1, $array['id']);
+        $this->assertIsString($array['value']);
+        $decoded = json_decode($array['value'], true);
+        $this->assertEquals('api', $decoded['source']);
+        $this->assertEquals('1.0', $decoded['version']);
     }
 }
