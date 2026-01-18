@@ -39,7 +39,7 @@ class RechargeClient implements ClientInterface, LoggerAwareInterface
     private RechargeConfig $config;
 
     /**
-     * @var array<string, Resources\AbstractResource|Resources\Customers|Resources\Subscriptions|Resources\Orders|Resources\Charges|Resources\Addresses|Resources\Products|Resources\Discounts|Resources\Bundles|Resources\Checkouts|Resources\Collections|Resources\Credits|Resources\Metafields|Resources\OneTimes|Resources\PaymentMethods|Resources\Plans|Resources\Store> Cached resource instances
+     * @var array<string, Resources\AbstractResource|Resources\Customers|Resources\Subscriptions|Resources\Orders|Resources\Charges|Resources\Addresses|Resources\Products|Resources\Discounts|Resources\Bundles|Resources\Checkouts|Resources\Collections|Resources\Credits|Resources\Metafields|Resources\OneTimes|Resources\PaymentMethods|Resources\Plans|Resources\Shop|Resources\Store> Cached resource instances
      */
     private array $resources = [];
 
@@ -407,6 +407,21 @@ class RechargeClient implements ClientInterface, LoggerAwareInterface
 
         /** @var Resources\Plans */
         return $this->resources['plans'];
+    }
+
+    /**
+     * Get Shop resource instance
+     *
+     * @return Resources\Shop Shop resource
+     */
+    public function shop(): Resources\Shop
+    {
+        if (!isset($this->resources['shop'])) {
+            $this->resources['shop'] = new Resources\Shop($this);
+        }
+
+        /** @var Resources\Shop */
+        return $this->resources['shop'];
     }
 
     /**

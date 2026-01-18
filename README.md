@@ -794,6 +794,35 @@ $client->paymentMethods()->delete(123);
 - For `shopify_payments` processor, updates are read-only (managed by Shopify)
 - Payment methods can only be deleted if not in use by active subscriptions
 
+### Shop (2021-01)
+
+Shop endpoints provide basic store information and shipping countries.
+
+**Note:** Shop endpoints are available in API version 2021-01. In 2021-11, this was unified/renamed as the `/store` endpoint.
+
+```php
+// Get shop information (automatically switches to 2021-01)
+$shop = $client->shop()->get();
+
+echo "Shop Name: {$shop->name}\n";
+echo "Currency: {$shop->currency}\n";
+echo "Timezone: {$shop->getTimezone()}\n";
+
+// Get shipping countries
+$shippingCountries = $client->shop()->getShippingCountries();
+
+foreach ($shippingCountries as $country) {
+    echo "Country: {$country['name']} ({$country['code']})\n";
+}
+```
+
+**Version Differences:**
+- **2021-01**: Uses `/shop` endpoint for shop information
+- **2021-11**: Uses `/store` endpoint for store information (replaces shop)
+- The SDK automatically handles version switching when using `shop()` method
+
+**Note:** For 2021-11, use `$client->store()->get()` instead of `$client->shop()->get()`.
+
 ## API Version
 
 ```php
@@ -826,7 +855,8 @@ $client->setApiVersion(ApiVersion::V2021_11);
 - `paymentMethods()` - Manage payment methods (2021-11, requires specific scopes)
 - `plans()` - Manage plans (2021-11 only, replaces deprecated products plan operations)
 - `products()` - Manage products (with sorting support)
-- `store()` - Get store info
+- `shop()` - Get shop info (2021-01 only, use store() for 2021-11)
+- `store()` - Get store info (2021-11, replaces shop endpoint from 2021-01)
 
 ## Error Handling
 
