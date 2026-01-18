@@ -39,7 +39,7 @@ class RechargeClient implements ClientInterface, LoggerAwareInterface
     private RechargeConfig $config;
 
     /**
-     * @var array<string, Resources\AbstractResource|Resources\Customers|Resources\Subscriptions|Resources\Orders|Resources\Charges|Resources\Addresses|Resources\Products|Resources\Discounts|Resources\Bundles|Resources\Checkouts|Resources\Collections|Resources\Credits|Resources\Metafields|Resources\Store> Cached resource instances
+     * @var array<string, Resources\AbstractResource|Resources\Customers|Resources\Subscriptions|Resources\Orders|Resources\Charges|Resources\Addresses|Resources\Products|Resources\Discounts|Resources\Bundles|Resources\Checkouts|Resources\Collections|Resources\Credits|Resources\Metafields|Resources\OneTimes|Resources\Store> Cached resource instances
      */
     private array $resources = [];
 
@@ -362,6 +362,21 @@ class RechargeClient implements ClientInterface, LoggerAwareInterface
 
         /** @var Resources\Metafields */
         return $this->resources['metafields'];
+    }
+
+    /**
+     * Get OneTimes resource instance
+     *
+     * @return Resources\OneTimes OneTimes resource
+     */
+    public function oneTimes(): Resources\OneTimes
+    {
+        if (!isset($this->resources['onetimes'])) {
+            $this->resources['onetimes'] = new Resources\OneTimes($this);
+        }
+
+        /** @var Resources\OneTimes */
+        return $this->resources['onetimes'];
     }
 
     /**

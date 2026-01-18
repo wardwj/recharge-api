@@ -9,6 +9,7 @@ use Recharge\Enums\Sort\BundleSort;
 use Recharge\Enums\Sort\ChargeSort;
 use Recharge\Enums\Sort\CustomerSort;
 use Recharge\Enums\Sort\MetafieldSort;
+use Recharge\Enums\Sort\OneTimeSort;
 use Recharge\Enums\Sort\OrderSort;
 use Recharge\Enums\Sort\SubscriptionSort;
 
@@ -138,5 +139,26 @@ class EnumSortTest extends TestCase
         $this->assertEquals(MetafieldSort::UPDATED_AT_ASC, MetafieldSort::tryFromString('updated_at-asc'));
         $this->assertNull(MetafieldSort::tryFromString('created_at-asc'));
         $this->assertNull(MetafieldSort::tryFromString('invalid-sort'));
+    }
+
+    public function testOneTimeSortEnum(): void
+    {
+        $this->assertEquals('id-desc', OneTimeSort::ID_DESC->value);
+        $this->assertEquals('created_at-asc', OneTimeSort::CREATED_AT_ASC->value);
+        $this->assertEquals('updated_at-desc', OneTimeSort::UPDATED_AT_DESC->value);
+    }
+
+    public function testOneTimeSortDefault(): void
+    {
+        $default = OneTimeSort::default();
+        $this->assertEquals(OneTimeSort::ID_DESC, $default);
+    }
+
+    public function testOneTimeSortTryFromString(): void
+    {
+        $this->assertEquals(OneTimeSort::ID_DESC, OneTimeSort::tryFromString('id-desc'));
+        $this->assertEquals(OneTimeSort::CREATED_AT_ASC, OneTimeSort::tryFromString('created_at-asc'));
+        $this->assertEquals(OneTimeSort::UPDATED_AT_DESC, OneTimeSort::tryFromString('updated_at-desc'));
+        $this->assertNull(OneTimeSort::tryFromString('invalid-sort'));
     }
 }

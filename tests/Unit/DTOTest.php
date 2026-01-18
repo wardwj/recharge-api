@@ -14,6 +14,7 @@ use Recharge\Data\Credit;
 use Recharge\Data\Customer;
 use Recharge\Data\Discount;
 use Recharge\Data\Metafield;
+use Recharge\Data\OneTime;
 use Recharge\Data\Order;
 use Recharge\Data\Subscription;
 use Recharge\Enums\AppliesToProductType;
@@ -818,5 +819,97 @@ class DTOTest extends TestCase
         $decoded = json_decode($array['value'], true);
         $this->assertEquals('api', $decoded['source']);
         $this->assertEquals('1.0', $decoded['version']);
+    }
+
+    // OneTime Tests
+    public function testOneTimeParsesBasicResponse(): void
+    {
+        $data = [
+            'id' => 1,
+            'address_id' => 123,
+            'customer_id' => 456,
+            'charge_id' => 789,
+            'external_variant_id' => 'variant_123',
+            'quantity' => 2,
+            'price' => '29.99',
+            'title' => 'One-Time Product',
+            'variant_title' => 'Variant Title',
+            'created_at' => '2024-01-01T00:00:00Z',
+            'updated_at' => '2024-01-01T00:00:00Z',
+        ];
+
+        $onetime = OneTime::fromArray($data);
+
+        $this->assertEquals(1, $onetime->id);
+        $this->assertEquals(123, $onetime->addressId);
+        $this->assertEquals(456, $onetime->customerId);
+        $this->assertEquals(789, $onetime->chargeId);
+        $this->assertEquals('variant_123', $onetime->externalVariantId);
+        $this->assertEquals(2, $onetime->quantity);
+        $this->assertEquals('29.99', $onetime->price);
+        $this->assertEquals('One-Time Product', $onetime->title);
+        $this->assertEquals('Variant Title', $onetime->variantTitle);
+        $this->assertNotNull($onetime->createdAt);
+        $this->assertNotNull($onetime->updatedAt);
+    }
+
+    public function testOneTimeHandlesNullFields(): void
+    {
+        $data = [
+            'id' => 2,
+            'address_id' => 123,
+        ];
+
+        $onetime = OneTime::fromArray($data);
+
+        $this->assertEquals(2, $onetime->id);
+        $this->assertEquals(123, $onetime->addressId);
+        $this->assertNull($onetime->customerId);
+        $this->assertNull($onetime->chargeId);
+        $this->assertNull($onetime->externalVariantId);
+        $this->assertNull($onetime->quantity);
+        $this->assertNull($onetime->price);
+        $this->assertNull($onetime->title);
+    }
+
+    public function testOneTimeHandlesFloatPrice(): void
+    {
+        $data = [
+            'id' => 3,
+            'address_id' => 123,
+            'price' => 29.99,
+        ];
+
+        $onetime = OneTime::fromArray($data);
+
+        $this->assertEquals(3, $onetime->id);
+        $this->assertEquals('29.99', $onetime->price);
+    }
+
+    public function testOneTimeToArray(): void
+    {
+        $onetime = new OneTime(
+            id: 1,
+            addressId: 123,
+            customerId: 456,
+            chargeId: 789,
+            externalVariantId: 'variant_123',
+            quantity: 2,
+            price: '29.99',
+            title: 'One-Time Product',
+            variantTitle: 'Variant Title'
+        );
+
+        $array = $onetime->toArray();
+
+        $this->assertEquals(1, $array['id']);
+        $this->assertEquals(123, $array['address_id']);
+        $this->assertEquals(456, $array['customer_id']);
+        $this->assertEquals(789, $array['charge_id']);
+        $this->assertEquals('variant_123', $array['external_variant_id']);
+        $this->assertEquals(2, $array['quantity']);
+        $this->assertEquals('29.99', $array['price']);
+        $this->assertEquals('One-Time Product', $array['title']);
+        $this->assertEquals('Variant Title', $array['variant_title']);
     }
 }

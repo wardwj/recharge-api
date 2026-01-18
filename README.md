@@ -115,6 +115,11 @@ The SDK supports sorting for list operations using type-safe enums or strings. U
 - `MetafieldSort::UPDATED_AT_ASC`, `MetafieldSort::UPDATED_AT_DESC`
 - Note: Metafields sorting is only available in API version 2021-01. The SDK automatically switches to 2021-01 when sorting is used.
 
+**One-Times (`OneTimeSort`):**
+- `OneTimeSort::ID_ASC`, `OneTimeSort::ID_DESC` (default)
+- `OneTimeSort::CREATED_AT_ASC`, `OneTimeSort::CREATED_AT_DESC`
+- `OneTimeSort::UPDATED_AT_ASC`, `OneTimeSort::UPDATED_AT_DESC`
+
 ```php
 use Recharge\Enums\Sort\SubscriptionSort;
 use Recharge\Enums\Sort\ChargeSort;
@@ -534,6 +539,70 @@ $client->metafields()->update(123, [
 $client->metafields()->delete(123);
 ```
 
+### One-Times
+
+One-times are non-recurring line items attached to a QUEUED charge. They represent one-off purchases rather than subscriptions.
+
+```php
+// List one-times
+foreach ($client->oneTimes()->list() as $onetime) {
+    echo "One-Time ID: {$onetime->id}, Price: {$onetime->price}\n";
+}
+
+// With sorting (using enum - recommended)
+use Recharge\Enums\Sort\OneTimeSort;
+
+foreach ($client->oneTimes()->list(['sort_by' => OneTimeSort::CREATED_AT_DESC]) as $onetime) {
+    // One-times sorted by creation date (newest first)
+}
+
+// Filter by address
+foreach ($client->oneTimes()->list(['address_id' => 123]) as $onetime) {
+    // One-times for a specific address
+}
+
+// Filter by customer
+foreach ($client->oneTimes()->list(['customer_id' => 456]) as $onetime) {
+    // One-times for a specific customer
+}
+
+// Filter by date range
+foreach ($client->oneTimes()->list([
+    'created_at_min' => '2024-01-01',
+    'created_at_max' => '2024-12-31',
+]) as $onetime) {
+    // One-times created in 2024
+}
+
+// Get a one-time
+$onetime = $client->oneTimes()->get(123);
+
+// Create a one-time
+// Note: In API version 2021-01, address_id must be in the path.
+// In 2021-11, address_id can be in the request body.
+// The SDK automatically handles version differences.
+$onetime = $client->oneTimes()->create([
+    'address_id' => 123, // Required
+    'external_variant_id' => 'variant_456',
+    'quantity' => 2,
+    'price' => 29.99,
+]);
+
+// Update a one-time
+$client->oneTimes()->update(123, [
+    'quantity' => 3,
+    'price' => 39.99,
+]);
+
+// Delete a one-time
+$client->oneTimes()->delete(123);
+```
+
+**Version Differences:**
+- **2021-01**: Creating onetimes requires `address_id` in the path: `POST /addresses/{address_id}/onetimes`
+- **2021-11**: Creating onetimes uses the standard endpoint: `POST /onetimes` (address_id can be in the body)
+- The SDK automatically handles these differences based on the current API version.
+
 ## API Version
 
 ```php
@@ -559,6 +628,9 @@ $client->setApiVersion(ApiVersion::V2021_11);
 - `charges()` - Manage charges (with full CRUD and action methods)
 - `checkouts()` - Manage checkouts (BigCommerce/Custom only, requires Pro plan)
 - `collections()` - Manage collections
+- `credits()` - Manage credits (2021-11 only)
+- `metafields()` - Manage metafields
+- `oneTimes()` - Manage one-time purchases
 - `orders()` - Manage orders
 - `products()` - List products
 - `store()` - Get store info
