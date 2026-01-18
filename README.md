@@ -357,6 +357,44 @@ $checkout = $client->checkouts()->charge('checkout_token_123', [
 // After processing, $checkout->chargeId will be set
 ```
 
+### Collections
+
+```php
+// List collections
+foreach ($client->collections()->list() as $collection) {
+    echo "Collection: {$collection->title}\n";
+}
+
+// Filter by title
+foreach ($client->collections()->list(['title' => 'Featured']) as $collection) {
+    // Collections with title containing 'Featured'
+}
+
+// Get a collection
+$collection = $client->collections()->get(123);
+
+// Create a collection
+$collection = $client->collections()->create([
+    'title' => 'Featured Products',
+    'description' => 'Our featured product collection',
+    'sort_order' => 'title-asc',
+]);
+
+// Update a collection
+$client->collections()->update(123, [
+    'title' => 'Updated Collection',
+    'sort_order' => 'created_at-desc',
+]);
+
+// List products in a collection
+foreach ($client->collections()->listProducts(123) as $product) {
+    echo "Product: {$product->title}\n";
+}
+
+// Bulk delete products from a collection (limit 250 per request)
+$client->collections()->deleteProductsBulk(123, [456, 789, 101]);
+```
+
 ## API Version
 
 ```php
@@ -381,6 +419,7 @@ $client->setApiVersion(ApiVersion::V2021_11);
 - `bundles()` - Manage bundles
 - `charges()` - Manage charges (with full CRUD and action methods)
 - `checkouts()` - Manage checkouts (BigCommerce/Custom only, requires Pro plan)
+- `collections()` - Manage collections
 - `orders()` - Manage orders
 - `products()` - List products
 - `store()` - Get store info

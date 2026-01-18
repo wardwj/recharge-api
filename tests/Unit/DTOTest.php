@@ -9,12 +9,14 @@ use Recharge\Data\Address;
 use Recharge\Data\Bundle;
 use Recharge\Data\Charge;
 use Recharge\Data\Checkout;
+use Recharge\Data\Collection;
 use Recharge\Data\Customer;
 use Recharge\Data\Discount;
 use Recharge\Data\Order;
 use Recharge\Data\Subscription;
 use Recharge\Enums\AppliesToProductType;
 use Recharge\Enums\ChargeStatus;
+use Recharge\Enums\CollectionSortOrder;
 use Recharge\Enums\DiscountDuration;
 use Recharge\Enums\DiscountStatus;
 use Recharge\Enums\DiscountType;
@@ -551,5 +553,44 @@ class DTOTest extends TestCase
         $this->assertEquals('checkout_token_789', $checkout->token);
         $this->assertEquals(12345, $checkout->chargeId);
         $this->assertNotNull($checkout->completedAt);
+    }
+
+    // Collection Tests
+    public function testCollectionParsesBasicResponse(): void
+    {
+        $data = [
+            'id' => 1,
+            'title' => 'Featured Products',
+            'description' => 'Our featured product collection',
+            'type' => 'manual',
+            'sort_order' => 'title-asc',
+            'created_at' => '2024-01-01T00:00:00Z',
+            'updated_at' => '2024-01-01T00:00:00Z',
+        ];
+
+        $collection = Collection::fromArray($data);
+
+        $this->assertEquals(1, $collection->id);
+        $this->assertEquals('Featured Products', $collection->title);
+        $this->assertEquals('Our featured product collection', $collection->description);
+        $this->assertEquals('manual', $collection->type);
+        $this->assertEquals(CollectionSortOrder::TITLE_ASC, $collection->sortOrder);
+        $this->assertNotNull($collection->createdAt);
+        $this->assertNotNull($collection->updatedAt);
+    }
+
+    public function testCollectionHandlesNullFields(): void
+    {
+        $data = [
+            'id' => 2,
+        ];
+
+        $collection = Collection::fromArray($data);
+
+        $this->assertEquals(2, $collection->id);
+        $this->assertNull($collection->title);
+        $this->assertNull($collection->description);
+        $this->assertNull($collection->type);
+        $this->assertNull($collection->sortOrder);
     }
 }
