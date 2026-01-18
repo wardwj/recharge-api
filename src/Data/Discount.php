@@ -101,7 +101,9 @@ final readonly class Discount
                 ? AppliesToProductType::tryFrom($data['applies_to_product_type'])
                 : null,
             appliesToId: isset($data['applies_to_id']) ? (int) $data['applies_to_id'] : null,
-            appliesTo: $data['applies_to'] ?? null,
+            appliesTo: isset($data['applies_to'])
+                ? (is_string($data['applies_to']) ? $data['applies_to'] : (string) json_encode($data['applies_to']))
+                : null,
             appliesToResource: $data['applies_to_resource'] ?? null,
             prerequisiteSubtotalMin: isset($data['prerequisite_subtotal_min'])
                 ? (is_numeric($data['prerequisite_subtotal_min']) ? (float) $data['prerequisite_subtotal_min'] : null)
