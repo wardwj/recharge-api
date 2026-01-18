@@ -39,7 +39,7 @@ class RechargeClient implements ClientInterface, LoggerAwareInterface
     private RechargeConfig $config;
 
     /**
-     * @var array<string, Resources\AbstractResource|Resources\Customers|Resources\Subscriptions|Resources\Orders|Resources\Charges|Resources\Addresses|Resources\Products|Resources\Discounts|Resources\Bundles|Resources\Checkouts|Resources\Collections|Resources\Credits|Resources\Metafields|Resources\OneTimes|Resources\Store> Cached resource instances
+     * @var array<string, Resources\AbstractResource|Resources\Customers|Resources\Subscriptions|Resources\Orders|Resources\Charges|Resources\Addresses|Resources\Products|Resources\Discounts|Resources\Bundles|Resources\Checkouts|Resources\Collections|Resources\Credits|Resources\Metafields|Resources\OneTimes|Resources\PaymentMethods|Resources\Store> Cached resource instances
      */
     private array $resources = [];
 
@@ -377,6 +377,21 @@ class RechargeClient implements ClientInterface, LoggerAwareInterface
 
         /** @var Resources\OneTimes */
         return $this->resources['onetimes'];
+    }
+
+    /**
+     * Get PaymentMethods resource instance
+     *
+     * @return Resources\PaymentMethods PaymentMethods resource
+     */
+    public function paymentMethods(): Resources\PaymentMethods
+    {
+        if (!isset($this->resources['payment_methods'])) {
+            $this->resources['payment_methods'] = new Resources\PaymentMethods($this);
+        }
+
+        /** @var Resources\PaymentMethods */
+        return $this->resources['payment_methods'];
     }
 
     /**

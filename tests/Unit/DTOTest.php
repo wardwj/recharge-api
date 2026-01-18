@@ -16,6 +16,7 @@ use Recharge\Data\Discount;
 use Recharge\Data\Metafield;
 use Recharge\Data\OneTime;
 use Recharge\Data\Order;
+use Recharge\Data\PaymentMethod;
 use Recharge\Data\Product;
 use Recharge\Data\Subscription;
 use Recharge\Enums\AppliesToProductType;
@@ -25,6 +26,9 @@ use Recharge\Enums\DiscountDuration;
 use Recharge\Enums\DiscountStatus;
 use Recharge\Enums\DiscountType;
 use Recharge\Enums\OrderStatus;
+use Recharge\Enums\PaymentMethodStatus;
+use Recharge\Enums\PaymentType;
+use Recharge\Enums\ProcessorName;
 use Recharge\Enums\SubscriptionStatus;
 
 /**
@@ -1038,5 +1042,124 @@ class DTOTest extends TestCase
         $this->assertEquals('Coffee Co', $array['vendor']);
         $this->assertEquals('Premium coffee', $array['description']);
         $this->assertTrue($array['requires_shipping']);
+    }
+
+    // PaymentMethod Tests
+    public function testPaymentMethodParsesBasicResponse(): void
+    {
+        $data = [
+            'id' => 1,
+            'customer_id' => 123,
+            'default' => true,
+            'payment_type' => 'CREDIT_CARD',
+            'processor_name' => 'stripe',
+            'processor_customer_token' => 'cus_abc123',
+            'processor_payment_method_token' => 'pm_xyz789',
+            'payment_details' => [
+                'brand' => 'visa',
+                'last4' => '4242',
+                'exp_month' => 12,
+                'exp_year' => 2025,
+            ],
+            'billing_address' => [
+                'first_name' => 'John',
+                'last_name' => 'Doe',
+                'address1' => '123 Main St',
+                'city' => 'New York',
+                'province' => 'NY',
+                'zip' => '10001',
+                'country_code' => 'US',
+            ],
+            'status' => 'valid',
+            'created_at' => '2024-01-01T00:00:00Z',
+            'updated_at' => '2024-01-01T00:00:00Z',
+        ];
+
+        $paymentMethod = PaymentMethod::fromArray($data);
+
+        $this->assertEquals(1, $paymentMethod->id);
+        $this->assertEquals(123, $paymentMethod->customerId);
+        $this->assertTrue($paymentMethod->default);
+        $this->assertEquals(PaymentType::CREDIT_CARD, $paymentMethod->paymentType);
+        $this->assertEquals(ProcessorName::STRIPE, $paymentMethod->processorName);
+        $this->assertEquals('cus_abc123', $paymentMethod->processorCustomerToken);
+        $this->assertEquals('pm_xyz789', $paymentMethod->processorPaymentMethodToken);
+        $this->assertIsArray($paymentMethod->paymentDetails);
+        $this->assertEquals('visa', $paymentMethod->paymentDetails['brand']);
+        $this->assertIsArray($paymentMethod->billingAddress);
+        $this->assertEquals('John', $paymentMethod->billingAddress['first_name']);
+        $this->assertEquals(PaymentMethodStatus::VALID, $paymentMethod->status);
+        $this->assertNotNull($paymentMethod->createdAt);
+        $this->assertNotNull($paymentMethod->updatedAt);
+    }
+
+    public function testPaymentMethodHandlesNullFields(): void
+    {
+        $data = [
+            'id' => 2,
+            'customer_id' => 456,
+            'default' => false,
+        ];
+
+        $paymentMethod = PaymentMethod::fromArray($data);
+
+        $this->assertEquals(2, $paymentMethod->id);
+        $this->assertEquals(456, $paymentMethod->customerId);
+        $this->assertFalse($paymentMethod->default);
+        $this->assertNull($paymentMethod->paymentType);
+        $this->assertNull($paymentMethod->processorName);
+        $this->assertNull($paymentMethod->status);
+        $this->assertNull($paymentMethod->paymentDetails);
+        $this->assertNull($paymentMethod->billingAddress);
+    }
+
+    public function testPaymentMethodHelperMethods(): void
+    {
+        $paymentMethod = new PaymentMethod(
+            id: 1,
+            customerId: 123,
+            default: true,
+            paymentType: PaymentType::CREDIT_CARD,
+            status: PaymentMethodStatus::VALID,
+            paymentDetails: ['last4' => '4242']
+        );
+
+        $this->assertTrue($paymentMethod->isValid());
+        $this->assertTrue($paymentMethod->isCreditCard());
+        $this->assertEquals('4242', $paymentMethod->getLast4());
+    }
+
+    public function testPaymentMethodGetLast4ReturnsNullForNonCreditCard(): void
+    {
+        $paymentMethod = new PaymentMethod(
+            id: 1,
+            customerId: 123,
+            paymentType: PaymentType::PAYPAL
+        );
+
+        $this->assertNull($paymentMethod->getLast4());
+    }
+
+    public function testPaymentMethodToArray(): void
+    {
+        $paymentMethod = new PaymentMethod(
+            id: 1,
+            customerId: 123,
+            default: true,
+            paymentType: PaymentType::CREDIT_CARD,
+            processorName: ProcessorName::STRIPE,
+            processorCustomerToken: 'cus_abc123',
+            status: PaymentMethodStatus::VALID
+        );
+
+        $array = $paymentMethod->toArray();
+
+        $this->assertEquals(1, $array['id']);
+        $this->assertEquals(123, $array['customer_id']);
+        $this->assertTrue($array['default']);
+        $this->assertEquals('CREDIT_CARD', $array['payment_type']);
+        $this->assertEquals('stripe', $array['processor_name']);
+        $this->assertEquals('cus_abc123', $array['processor_customer_token']);
+        $this->assertEquals('valid', $array['status']);
     }
 }

@@ -79,6 +79,7 @@ The SDK supports sorting for list operations using type-safe enums or strings. U
 - `MetafieldSort` - For metafields (2021-01 only)
 - `OneTimeSort` - For one-times
 - `ProductSort` - For products
+- `PaymentMethodSort` - For payment methods
 
 **Subscriptions (`SubscriptionSort`):**
 - `SubscriptionSort::ID_ASC`, `SubscriptionSort::ID_DESC` (default)
@@ -127,6 +128,11 @@ The SDK supports sorting for list operations using type-safe enums or strings. U
 - `ProductSort::CREATED_AT_ASC`, `ProductSort::CREATED_AT_DESC`
 - `ProductSort::UPDATED_AT_ASC`, `ProductSort::UPDATED_AT_DESC`
 - `ProductSort::TITLE_ASC`, `ProductSort::TITLE_DESC`
+
+**Payment Methods (`PaymentMethodSort`):**
+- `PaymentMethodSort::ID_ASC`, `PaymentMethodSort::ID_DESC` (default)
+- `PaymentMethodSort::CREATED_AT_ASC`, `PaymentMethodSort::CREATED_AT_DESC`
+- `PaymentMethodSort::UPDATED_AT_ASC`, `PaymentMethodSort::UPDATED_AT_DESC`
 
 ```php
 use Recharge\Enums\Sort\SubscriptionSort;
@@ -680,6 +686,107 @@ $count = $client->products()->count();
 - **2021-01**: Includes fields like `shopify_product_id`, `subscription_defaults`, `discount_amount`, `discount_type`
 - The SDK automatically handles identifier differences based on the current API version.
 
+### Payment Methods
+
+Payment methods represent customer payment information stored in Recharge.
+
+**Note:** Payment methods are primarily available in API version 2021-11. Payment sources in 2021-01 are deprecated.
+
+**Permissions Required:** Payment methods require specific API token scopes:
+- `read_payment_methods` for read operations
+- `write_payment_methods` for create/update/delete operations
+
+```php
+// List payment methods
+foreach ($client->paymentMethods()->list() as $paymentMethod) {
+    echo "Payment Method ID: {$paymentMethod->id}, Type: {$paymentMethod->paymentType?->value}\n";
+}
+
+// With sorting (using enum - recommended)
+use Recharge\Enums\Sort\PaymentMethodSort;
+
+foreach ($client->paymentMethods()->list(['sort_by' => PaymentMethodSort::CREATED_AT_DESC]) as $paymentMethod) {
+    // Payment methods sorted by creation date (newest first)
+}
+
+// Filter by customer
+foreach ($client->paymentMethods()->list(['customer_id' => 123]) as $paymentMethod) {
+    // Payment methods for a specific customer
+}
+
+// Include billing addresses
+foreach ($client->paymentMethods()->list(['include' => 'addresses']) as $paymentMethod) {
+    // Payment methods with billing addresses included
+}
+
+// Get a payment method
+$paymentMethod = $client->paymentMethods()->get(123);
+
+// Check if payment method is valid
+if ($paymentMethod->isValid()) {
+    echo "Payment method is valid\n";
+}
+
+// Get last 4 digits (for credit cards)
+if ($paymentMethod->isCreditCard()) {
+    echo "Last 4: {$paymentMethod->getLast4()}\n";
+}
+
+// Create a payment method
+use Recharge\Enums\PaymentType;
+use Recharge\Enums\ProcessorName;
+
+$paymentMethod = $client->paymentMethods()->create([
+    'customer_id' => 123,
+    'payment_type' => PaymentType::CREDIT_CARD->value,
+    'processor_name' => ProcessorName::STRIPE->value,
+    'processor_customer_token' => 'cus_abc123',
+    'processor_payment_method_token' => 'pm_xyz789',
+    'default' => true, // Set as default (will unset other defaults for this customer)
+    'billing_address' => [
+        'first_name' => 'John',
+        'last_name' => 'Doe',
+        'address1' => '123 Main St',
+        'city' => 'New York',
+        'province' => 'NY',
+        'zip' => '10001',
+        'country_code' => 'US',
+    ],
+]);
+
+// Update a payment method (limited - typically only default and billing_address)
+$client->paymentMethods()->update(123, [
+    'default' => true, // Set as default
+    'billing_address' => [
+        'address1' => '456 Oak Ave',
+        'city' => 'Los Angeles',
+    ],
+]);
+
+// Delete a payment method (only if not in use by active subscriptions)
+$client->paymentMethods()->delete(123);
+```
+
+**Payment Types:**
+- `PaymentType::CREDIT_CARD` - Credit card
+- `PaymentType::PAYPAL` - PayPal
+- `PaymentType::APPLE_PAY` - Apple Pay
+- `PaymentType::GOOGLE_PAY` - Google Pay
+- `PaymentType::SEPA_DEBIT` - SEPA Direct Debit
+
+**Processor Names:**
+- `ProcessorName::STRIPE` - Stripe
+- `ProcessorName::BRAINTREE` - Braintree
+- `ProcessorName::AUTHORIZE` - Authorize.net
+- `ProcessorName::SHOPIFY_PAYMENTS` - Shopify Payments (read-only)
+- `ProcessorName::MOLLIE` - Mollie
+
+**Important Notes:**
+- Only one payment method can be set as default per customer
+- Many fields cannot be updated (e.g., card number, expiry) - create a new payment method instead
+- For `shopify_payments` processor, updates are read-only (managed by Shopify)
+- Payment methods can only be deleted if not in use by active subscriptions
+
 ## API Version
 
 ```php
@@ -709,7 +816,8 @@ $client->setApiVersion(ApiVersion::V2021_11);
 - `metafields()` - Manage metafields
 - `oneTimes()` - Manage one-time purchases
 - `orders()` - Manage orders
-- `products()` - List products
+- `paymentMethods()` - Manage payment methods (2021-11, requires specific scopes)
+- `products()` - Manage products (with sorting support)
 - `store()` - Get store info
 
 ## Error Handling
