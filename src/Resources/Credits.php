@@ -14,8 +14,9 @@ use Recharge\Support\Paginator;
  * Store credits are applied to customer accounts and can be used to offset
  * future charges.
  *
+ * Note: Credits endpoints are only available in API version 2021-11.
+ *
  * @see https://developer.rechargepayments.com/2021-11/credits
- * @see https://developer.rechargepayments.com/2021-01/credits
  */
 class Credits extends AbstractResource
 {
@@ -34,7 +35,6 @@ class Credits extends AbstractResource
      * @return Paginator<Credit> Paginator instance for iterating credits
      * @throws \Recharge\Exceptions\RechargeException
      * @see https://developer.rechargepayments.com/2021-11/credits#list-credits
-     * @see https://developer.rechargepayments.com/2021-01/credits#list-credits
      */
     public function list(array $queryParams = []): Paginator
     {
@@ -54,7 +54,6 @@ class Credits extends AbstractResource
      * @return Credit Credit DTO
      * @throws \Recharge\Exceptions\RechargeException
      * @see https://developer.rechargepayments.com/2021-11/credits#retrieve-a-credit
-     * @see https://developer.rechargepayments.com/2021-01/credits#retrieve-a-credit
      */
     public function get(int $creditId): Credit
     {
@@ -70,7 +69,6 @@ class Credits extends AbstractResource
      * @return Credit Created Credit DTO
      * @throws \Recharge\Exceptions\RechargeException
      * @see https://developer.rechargepayments.com/2021-11/credits#create-a-credit
-     * @see https://developer.rechargepayments.com/2021-01/credits#create-a-credit
      */
     public function create(array $data): Credit
     {
@@ -87,7 +85,6 @@ class Credits extends AbstractResource
      * @return Credit Updated Credit DTO
      * @throws \Recharge\Exceptions\RechargeException
      * @see https://developer.rechargepayments.com/2021-11/credits#update-a-credit
-     * @see https://developer.rechargepayments.com/2021-01/credits#update-a-credit
      */
     public function update(int $creditId, array $data): Credit
     {
@@ -104,7 +101,6 @@ class Credits extends AbstractResource
      * @param int $creditId Credit ID
      * @throws \Recharge\Exceptions\RechargeException
      * @see https://developer.rechargepayments.com/2021-11/credits#delete-a-credit
-     * @see https://developer.rechargepayments.com/2021-01/credits#delete-a-credit
      */
     public function delete(int $creditId): void
     {

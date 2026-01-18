@@ -10,13 +10,14 @@ use Carbon\CarbonImmutable;
  * Credit Data Transfer Object
  *
  * Immutable DTO representing a Recharge store credit.
- * Handles both API versions 2021-01 and 2021-11.
+ * Handles API version 2021-11.
  *
  * Store credits are applied to customer accounts and can be used
  * to offset future charges.
  *
+ * Note: Credits are only available in API version 2021-11.
+ *
  * @see https://developer.rechargepayments.com/2021-11/credits#the-credit-object
- * @see https://developer.rechargepayments.com/2021-01/credits#the-credit-object
  */
 final readonly class Credit
 {
