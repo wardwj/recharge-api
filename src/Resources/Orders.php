@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Recharge\Resources;
 
 use Recharge\Data\Order;
-use Recharge\Enums\ApiVersion;
 use Recharge\Enums\Sort\OrderSort;
 use Recharge\Support\Paginator;
 
@@ -40,28 +39,17 @@ class Orders extends AbstractResource
      * Supports filtering by status, customer_id, created_at, updated_at, and more.
      * Supports sorting via sort_by parameter (OrderSort enum or string).
      *
-     * Note: Orders sorting is only available in API version 2021-01.
-     * This method automatically switches to 2021-01 when sort_by is provided.
-     *
      * @param array<string, mixed> $queryParams Query parameters (limit, status, customer_id, created_at_min, sort_by, etc.)
      *                                           sort_by can be an OrderSort enum or a string value
      * @return Paginator<Order> Paginator instance for iterating orders
      * @throws \Recharge\Exceptions\RechargeException
      * @throws \InvalidArgumentException If sort_by value is invalid
+     * @see https://developer.rechargepayments.com/2021-11/orders#list-orders
      * @see https://developer.rechargepayments.com/2021-01/orders#list-orders
      */
     public function list(array $queryParams = []): Paginator
     {
         $queryParams = $this->validateSort($queryParams);
-        $needsVersionSwitch = isset($queryParams['sort_by']);
-
-        // Orders sorting requires 2021-01 API version
-        // Note: We switch the version and keep it switched since Paginator is lazy
-        // and makes requests during iteration. The version will remain 2021-01
-        // until the user switches it back or creates a new paginator.
-        if ($needsVersionSwitch) {
-            $this->client->setApiVersion(ApiVersion::V2021_01);
-        }
 
         return new Paginator(
             client: $this->client,

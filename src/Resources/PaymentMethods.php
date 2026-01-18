@@ -68,14 +68,9 @@ class PaymentMethods extends AbstractResource
      */
     public function list(array $queryParams = []): Paginator
     {
-        $originalVersion = $this->client->getApiVersion();
+        $context = $this->switchToVersion(ApiVersion::V2021_11);
 
         try {
-            // Payment methods require 2021-11 API version
-            if ($originalVersion !== ApiVersion::V2021_11) {
-                $this->client->setApiVersion(ApiVersion::V2021_11);
-            }
-
             $queryParams = $this->validateSort($queryParams);
 
             return new Paginator(
@@ -86,10 +81,7 @@ class PaymentMethods extends AbstractResource
                 itemsKey: 'payment_methods'
             );
         } finally {
-            // Restore original API version if it was changed
-            if ($this->client->getApiVersion() !== $originalVersion) {
-                $this->client->setApiVersion($originalVersion);
-            }
+            $context->restore();
         }
     }
 

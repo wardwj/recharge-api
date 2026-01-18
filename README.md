@@ -72,11 +72,11 @@ The SDK supports sorting for list operations using type-safe enums or strings. U
 **Available Sort Enums:**
 - `SubscriptionSort` - For subscriptions
 - `ChargeSort` - For charges
-- `OrderSort` - For orders (2021-01 only)
+- `OrderSort` - For orders
 - `CustomerSort` - For customers
 - `DiscountSort` - For discounts
 - `BundleSort` - For bundles
-- `MetafieldSort` - For metafields (2021-01 only)
+- `MetafieldSort` - For metafields
 - `OneTimeSort` - For one-times
 - `ProductSort` - For products
 - `PaymentMethodSort` - For payment methods
@@ -117,7 +117,6 @@ The SDK supports sorting for list operations using type-safe enums or strings. U
 **Metafields (`MetafieldSort`):**
 - `MetafieldSort::ID_ASC`, `MetafieldSort::ID_DESC` (default)
 - `MetafieldSort::UPDATED_AT_ASC`, `MetafieldSort::UPDATED_AT_DESC`
-- Note: Metafields sorting is only available in API version 2021-01. The SDK automatically switches to 2021-01 when sorting is used.
 
 **One-Times (`OneTimeSort`):**
 - `OneTimeSort::ID_ASC`, `OneTimeSort::ID_DESC` (default)

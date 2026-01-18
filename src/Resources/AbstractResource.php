@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace Recharge\Resources;
 
 use Recharge\Contracts\ResourceInterface;
+use Recharge\Enums\ApiVersion;
 use Recharge\RechargeClient;
 use Recharge\Support\SortValidator;
+use Recharge\Support\VersionContext;
 
 /**
  * Abstract base class for all Recharge API resources
@@ -115,5 +117,25 @@ abstract class AbstractResource implements ResourceInterface
         }
 
         return SortValidator::normalizeAndValidate($queryParams, $enumClass);
+    }
+
+    /**
+     * Switch to a specific API version and return a context that restores automatically
+     *
+     * The version will be automatically restored when the context is destroyed.
+     * Use with a try-finally pattern or let the context handle restoration via destructor.
+     *
+     * @param ApiVersion $requiredVersion The API version required for this operation
+     * @return VersionContext Context that will restore the original version on destruction
+     */
+    protected function switchToVersion(ApiVersion $requiredVersion): VersionContext
+    {
+        $originalVersion = $this->client->getApiVersion();
+
+        if ($originalVersion !== $requiredVersion) {
+            $this->client->setApiVersion($requiredVersion);
+        }
+
+        return new VersionContext($this->client, $originalVersion);
     }
 }

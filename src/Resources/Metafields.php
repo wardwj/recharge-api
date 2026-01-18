@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Recharge\Resources;
 
 use Recharge\Data\Metafield;
-use Recharge\Enums\ApiVersion;
 use Recharge\Enums\Sort\MetafieldSort;
 use Recharge\Support\Paginator;
 
@@ -41,29 +40,17 @@ class Metafields extends AbstractResource
      * Supports filtering by owner_resource, owner_id, namespace, key, and more.
      * Supports sorting via sort_by parameter (MetafieldSort enum or string).
      *
-     * Note: Metafields sorting is only available in API version 2021-01.
-     * This method automatically switches to 2021-01 when sort_by is provided.
-     *
      * @param array<string, mixed> $queryParams Query parameters (limit, owner_resource, owner_id, namespace, key, sort_by, etc.)
      *                                           sort_by can be a MetafieldSort enum or a string value
      * @return Paginator<Metafield> Paginator instance for iterating metafields
      * @throws \Recharge\Exceptions\RechargeException
      * @throws \InvalidArgumentException If sort_by value is invalid
-     * @see https://developer.rechargepayments.com/2021-01/metafields#list-metafields
      * @see https://developer.rechargepayments.com/2021-11/metafields#list-metafields
+     * @see https://developer.rechargepayments.com/2021-01/metafields#list-metafields
      */
     public function list(array $queryParams = []): Paginator
     {
         $queryParams = $this->validateSort($queryParams);
-        $needsVersionSwitch = isset($queryParams['sort_by']);
-
-        // Metafields sorting requires 2021-01 API version
-        // Note: We switch the version and keep it switched since Paginator is lazy
-        // and makes requests during iteration. The version will remain 2021-01
-        // until the user switches it back or creates a new paginator.
-        if ($needsVersionSwitch) {
-            $this->client->setApiVersion(ApiVersion::V2021_01);
-        }
 
         return new Paginator(
             client: $this->client,

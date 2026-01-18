@@ -45,22 +45,14 @@ class Shop extends AbstractResource
      */
     public function get(): StoreDTO
     {
-        $originalVersion = $this->client->getApiVersion();
+        $context = $this->switchToVersion(ApiVersion::V2021_01);
 
         try {
-            // Shop endpoint requires 2021-01 API version
-            if ($originalVersion !== ApiVersion::V2021_01) {
-                $this->client->setApiVersion(ApiVersion::V2021_01);
-            }
-
             $response = $this->client->get($this->endpoint);
 
             return StoreDTO::fromArray($response['shop'] ?? []);
         } finally {
-            // Restore original API version if it was changed
-            if ($this->client->getApiVersion() !== $originalVersion) {
-                $this->client->setApiVersion($originalVersion);
-            }
+            $context->restore();
         }
     }
 
@@ -77,22 +69,14 @@ class Shop extends AbstractResource
      */
     public function getShippingCountries(): array
     {
-        $originalVersion = $this->client->getApiVersion();
+        $context = $this->switchToVersion(ApiVersion::V2021_01);
 
         try {
-            // Shop endpoint requires 2021-01 API version
-            if ($originalVersion !== ApiVersion::V2021_01) {
-                $this->client->setApiVersion(ApiVersion::V2021_01);
-            }
-
             $response = $this->client->get($this->buildEndpoint('shipping_countries'));
 
             return $response['shipping_countries'] ?? [];
         } finally {
-            // Restore original API version if it was changed
-            if ($this->client->getApiVersion() !== $originalVersion) {
-                $this->client->setApiVersion($originalVersion);
-            }
+            $context->restore();
         }
     }
 }
