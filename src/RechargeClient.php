@@ -39,7 +39,7 @@ class RechargeClient implements ClientInterface, LoggerAwareInterface
     private RechargeConfig $config;
 
     /**
-     * @var array<string, Resources\AbstractResource|Resources\Customers|Resources\Subscriptions|Resources\Orders|Resources\Charges|Resources\Addresses|Resources\Products|Resources\Discounts|Resources\Bundles|Resources\Checkouts|Resources\Collections|Resources\Credits|Resources\Metafields|Resources\OneTimes|Resources\PaymentMethods|Resources\Plans|Resources\Shop|Resources\Store|Resources\Webhooks> Cached resource instances
+     * @var array<string, Resources\AbstractResource|Resources\Customers|Resources\Subscriptions|Resources\Orders|Resources\Charges|Resources\Addresses|Resources\Products|Resources\Discounts|Resources\Bundles|Resources\Checkouts|Resources\Collections|Resources\Credits|Resources\Metafields|Resources\OneTimes|Resources\PaymentMethods|Resources\Plans|Resources\Shop|Resources\Store|Resources\Webhooks|Resources\AsyncBatches|Resources\AsyncBatchTasks> Cached resource instances
      */
     private array $resources = [];
 
@@ -451,5 +451,35 @@ class RechargeClient implements ClientInterface, LoggerAwareInterface
 
         /** @var Resources\Webhooks */
         return $this->resources['webhooks'];
+    }
+
+    /**
+     * Get AsyncBatches resource instance
+     *
+     * @return Resources\AsyncBatches AsyncBatches resource
+     */
+    public function asyncBatches(): Resources\AsyncBatches
+    {
+        if (!isset($this->resources['asyncBatches'])) {
+            $this->resources['asyncBatches'] = new Resources\AsyncBatches($this);
+        }
+
+        /** @var Resources\AsyncBatches */
+        return $this->resources['asyncBatches'];
+    }
+
+    /**
+     * Get AsyncBatchTasks resource instance
+     *
+     * @return Resources\AsyncBatchTasks AsyncBatchTasks resource
+     */
+    public function asyncBatchTasks(): Resources\AsyncBatchTasks
+    {
+        if (!isset($this->resources['asyncBatchTasks'])) {
+            $this->resources['asyncBatchTasks'] = new Resources\AsyncBatchTasks($this);
+        }
+
+        /** @var Resources\AsyncBatchTasks */
+        return $this->resources['asyncBatchTasks'];
     }
 }
