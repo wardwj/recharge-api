@@ -81,6 +81,7 @@ The SDK supports sorting for list operations using type-safe enums or strings. U
 - `ProductSort` - For products
 - `PaymentMethodSort` - For payment methods
 - `PlanSort` - For plans (2021-11 only)
+- `WebhookSort` - For webhooks
 
 **Subscriptions (`SubscriptionSort`):**
 - `SubscriptionSort::ID_ASC`, `SubscriptionSort::ID_DESC` (default)
@@ -139,6 +140,11 @@ The SDK supports sorting for list operations using type-safe enums or strings. U
 - `PlanSort::CREATED_AT_ASC`, `PlanSort::CREATED_AT_DESC`
 - `PlanSort::UPDATED_AT_ASC`, `PlanSort::UPDATED_AT_DESC`
 - Note: Plans are only available in API version 2021-11. The SDK automatically switches to 2021-11 when needed.
+
+**Webhooks (`WebhookSort`):**
+- `WebhookSort::ID_ASC`, `WebhookSort::ID_DESC` (default)
+- `WebhookSort::CREATED_AT_ASC`, `WebhookSort::CREATED_AT_DESC`
+- `WebhookSort::UPDATED_AT_ASC`, `WebhookSort::UPDATED_AT_DESC`
 
 ```php
 use Recharge\Enums\Sort\SubscriptionSort;
@@ -821,6 +827,59 @@ foreach ($shippingCountries as $country) {
 - The SDK automatically handles version switching when using `shop()` method
 
 **Note:** For 2021-11, use `$client->store()->get()` instead of `$client->shop()->get()`.
+
+### Webhooks
+
+Webhooks allow you to subscribe to Recharge events and receive notifications when those events occur.
+
+```php
+// List webhooks
+foreach ($client->webhooks()->list() as $webhook) {
+    echo "Webhook ID: {$webhook->id}, Address: {$webhook->address}\n";
+    echo "Topics: " . implode(', ', $webhook->topics) . "\n";
+}
+
+// With sorting (using enum - recommended)
+use Recharge\Enums\Sort\WebhookSort;
+
+foreach ($client->webhooks()->list(['sort_by' => WebhookSort::CREATED_AT_DESC]) as $webhook) {
+    // Webhooks sorted by creation date (newest first)
+}
+
+// Get a webhook
+$webhook = $client->webhooks()->get(123);
+
+// Create a webhook
+$webhook = $client->webhooks()->create([
+    'address' => 'https://your-app.com/webhooks/recharge',
+    'topics' => [
+        'charge/created',
+        'charge/processed',
+        'subscription/created',
+        'subscription/updated',
+    ],
+]);
+
+// Update a webhook
+$webhook = $client->webhooks()->update(123, [
+    'address' => 'https://your-app.com/webhooks/recharge-updated',
+    'topics' => [
+        'charge/created',
+        'subscription/created',
+    ],
+]);
+
+// Delete a webhook
+$client->webhooks()->delete(123);
+```
+
+**Available Webhook Topics:**
+- `charge/created` - When a charge is created
+- `charge/processed` - When a charge is processed
+- `subscription/created` - When a subscription is created
+- `subscription/updated` - When a subscription is updated
+- `subscription/deleted` - When a subscription is deleted
+- And more - see [Recharge Webhooks documentation](https://developer.rechargepayments.com/2021-11/webhooks#available-webhooks)
 
 ## API Version
 

@@ -39,7 +39,7 @@ class RechargeClient implements ClientInterface, LoggerAwareInterface
     private RechargeConfig $config;
 
     /**
-     * @var array<string, Resources\AbstractResource|Resources\Customers|Resources\Subscriptions|Resources\Orders|Resources\Charges|Resources\Addresses|Resources\Products|Resources\Discounts|Resources\Bundles|Resources\Checkouts|Resources\Collections|Resources\Credits|Resources\Metafields|Resources\OneTimes|Resources\PaymentMethods|Resources\Plans|Resources\Shop|Resources\Store> Cached resource instances
+     * @var array<string, Resources\AbstractResource|Resources\Customers|Resources\Subscriptions|Resources\Orders|Resources\Charges|Resources\Addresses|Resources\Products|Resources\Discounts|Resources\Bundles|Resources\Checkouts|Resources\Collections|Resources\Credits|Resources\Metafields|Resources\OneTimes|Resources\PaymentMethods|Resources\Plans|Resources\Shop|Resources\Store|Resources\Webhooks> Cached resource instances
      */
     private array $resources = [];
 
@@ -436,5 +436,20 @@ class RechargeClient implements ClientInterface, LoggerAwareInterface
         }
 
         return $this->resources['store'];
+    }
+
+    /**
+     * Get Webhooks resource instance
+     *
+     * @return Resources\Webhooks Webhooks resource
+     */
+    public function webhooks(): Resources\Webhooks
+    {
+        if (!isset($this->resources['webhooks'])) {
+            $this->resources['webhooks'] = new Resources\Webhooks($this);
+        }
+
+        /** @var Resources\Webhooks */
+        return $this->resources['webhooks'];
     }
 }
