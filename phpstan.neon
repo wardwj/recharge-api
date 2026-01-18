@@ -29,6 +29,10 @@ parameters:
         
         # Resource caching returns AbstractResource but methods return specific types (intentional)
         - '#Method Recharge\\RechargeClient::(customers|subscriptions|orders|charges|addresses|products|store)\(\) should return .+ but returns .+AbstractResource#'
+        
+        # Enum value comparisons are always true/false based on enum cases (intentional - helper methods for convenience)
+        - '#Comparison operation .+ between .+ and (200|300|400|500|600) is always (true|false)\.#'
+        - '#Comparison operation .+ between (200|400|500).+ and (300|500|600) is always (true|false)\.#'
     
     # Exclude patterns
     excludePaths:

@@ -10,10 +10,14 @@ use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\StreamFactoryInterface;
 use Recharge\Config\RechargeConfig;
+use Recharge\Enums\HttpStatusCode;
 use Recharge\Exceptions\RechargeApiException;
 use Recharge\Exceptions\RechargeAuthenticationException;
 use Recharge\Exceptions\RechargeException;
+use Recharge\Exceptions\RechargeNotFoundException;
+use Recharge\Exceptions\RechargeRateLimitException;
 use Recharge\Exceptions\RechargeRequestException;
+use Recharge\Exceptions\RechargeValidationException;
 
 /**
  * HTTP Connector
@@ -210,19 +214,16 @@ final readonly class Connector
                 $message = is_string($body['errors']) ? $body['errors'] : (string) json_encode($body['errors']);
             }
 
-            if ($statusCode === 401 || $statusCode === 403) {
-                throw new RechargeAuthenticationException(
-                    $message,
-                    $statusCode,
-                    $body
-                );
-            }
+            // Throw specific exceptions based on status code
+            $httpStatus = HttpStatusCode::tryFromCode($statusCode);
 
-            throw new RechargeApiException(
-                $message,
-                $statusCode,
-                $body
-            );
+            throw match ($httpStatus) {
+                HttpStatusCode::UNAUTHORIZED, HttpStatusCode::FORBIDDEN => new RechargeAuthenticationException($message, $statusCode, $body),
+                HttpStatusCode::NOT_FOUND => new RechargeNotFoundException($message, $statusCode, $body),
+                HttpStatusCode::UNPROCESSABLE_ENTITY => new RechargeValidationException($message, $statusCode, $body),
+                HttpStatusCode::TOO_MANY_REQUESTS => $this->createRateLimitException($message, $statusCode, $body, $response),
+                default => new RechargeApiException($message, $statusCode, $body),
+            };
         }
 
         if ($includeHeaders) {
@@ -230,5 +231,25 @@ final readonly class Connector
         }
 
         return $body;
+    }
+
+    /**
+     * Create a rate limit exception with rate limit info from headers
+     *
+     * @param string $message Error message
+     * @param int $statusCode HTTP status code (should be 429)
+     * @param array<string, mixed> $body Response body
+     * @param ResponseInterface $response PSR-7 response
+     * @return RechargeRateLimitException
+     */
+    private function createRateLimitException(
+        string $message,
+        int $statusCode,
+        array $body,
+        ResponseInterface $response
+    ): RechargeRateLimitException {
+        $rateLimitInfo = RateLimitInfo::fromResponse($response);
+
+        return new RechargeRateLimitException($message, $statusCode, $body, $rateLimitInfo);
     }
 }

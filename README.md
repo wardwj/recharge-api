@@ -1116,18 +1116,92 @@ $client->setApiVersion(ApiVersion::V2021_11);
 ## Error Handling
 
 ```php
-use Recharge\Exceptions\{RechargeApiException, ValidationException};
+use Recharge\Exceptions\{
+    RechargeException,
+    RechargeApiException,
+    RechargeAuthenticationException,
+    RechargeNotFoundException,
+    RechargeRateLimitException,
+    RechargeValidationException,
+    RechargeRequestException,
+    ValidationException
+};
 
 try {
     $sub = $client->subscriptions()->get(123);
-} catch (ValidationException $e) {
-    // Client-side validation errors
-    print_r($e->getErrors());
+} catch (RechargeNotFoundException $e) {
+    // Resource not found (404)
+    echo "Subscription not found: " . $e->getMessage() . "\n";
+} catch (RechargeAuthenticationException $e) {
+    // Authentication failed (401/403)
+    echo "Authentication failed: " . $e->getMessage() . "\n";
+    echo "Check your API token and permissions\n";
+} catch (RechargeValidationException $e) {
+    // API validation error (422)
+    echo "Validation failed: " . $e->getMessage() . "\n";
+    $errors = $e->getResponseField('errors');
+    if ($errors) {
+        print_r($errors);
+    }
+} catch (RechargeRateLimitException $e) {
+    // Rate limit exceeded (429)
+    echo "Rate limit exceeded: " . $e->getMessage() . "\n";
+    $rateLimitInfo = $e->getRateLimitInfo();
+    if ($rateLimitInfo) {
+        echo "Retry after: " . ($rateLimitInfo->retryAfter ?? 'unknown') . " seconds\n";
+        echo "Remaining requests: " . ($rateLimitInfo->remaining ?? 'unknown') . "\n";
+    }
+    // Wait before retrying
+    sleep($e->getRetryAfter() ?? 60);
 } catch (RechargeApiException $e) {
-    // API errors
-    echo $e->getMessage();
+    // Other API errors (400, 500, etc.)
+    echo "API error: " . $e->getMessage() . "\n";
+    echo "Status code: " . $e->getCode() . "\n";
+} catch (RechargeRequestException $e) {
+    // Network/transport level errors
+    echo "Request failed: " . $e->getMessage() . "\n";
+} catch (ValidationException $e) {
+    // Client-side validation errors (before API call)
+    echo "Validation failed: " . $e->getMessage() . "\n";
+    foreach ($e->getErrors() as $field => $error) {
+        echo "  {$field}: {$error}\n";
+    }
 }
 ```
+
+**Exception Hierarchy:**
+
+- `RechargeException` - Base exception for all Recharge-related errors
+  - `RechargeRequestException` - Network/transport level errors
+  - `RechargeApiException` - API-level errors (4xx, 5xx)
+    - `RechargeAuthenticationException` - Authentication errors (401, 403)
+    - `RechargeNotFoundException` - Resource not found (404)
+    - `RechargeValidationException` - API validation errors (422)
+    - `RechargeRateLimitException` - Rate limit exceeded (429)
+  - `ValidationException` - Client-side validation errors
+
+**HTTP Status Codes:**
+
+The SDK uses standard HTTP status codes. You can reference them via the `HttpStatusCode` enum:
+
+```php
+use Recharge\Enums\HttpStatusCode;
+
+// Check status codes
+HttpStatusCode::OK->value; // 200
+HttpStatusCode::CREATED->value; // 201
+HttpStatusCode::NOT_FOUND->value; // 404
+HttpStatusCode::TOO_MANY_REQUESTS->value; // 429
+
+// Helper methods
+$status = HttpStatusCode::fromCode(404);
+$status->isSuccess(); // false
+$status->isClientError(); // true
+$status->isServerError(); // false
+$status->isError(); // true
+```
+
+See the [Recharge API Responses documentation](https://developer.rechargepayments.com/2021-11/responses) for details on all status codes.
 
 ## Pagination
 
