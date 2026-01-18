@@ -194,6 +194,41 @@ $client->subscriptions()->cancel(123, 'Customer requested');
 $client->subscriptions()->delete(123);
 ```
 
+### Notifications
+
+```php
+// Send a notification to a customer
+// Using enum (recommended)
+use Recharge\Enums\NotificationTemplate;
+
+$client->customers()->sendNotification(
+    123,
+    NotificationTemplate::GET_ACCOUNT_ACCESS
+);
+
+// Using string template name
+$client->customers()->sendNotification(
+    123,
+    'upcoming_charge'
+);
+
+// With template variables (if required by template)
+$client->customers()->sendNotification(
+    123,
+    NotificationTemplate::UPCOMING_CHARGE,
+    [
+        'charge_date' => '2024-12-31',
+        'amount' => '29.99',
+    ]
+);
+```
+
+**Supported Templates:**
+- `NotificationTemplate::GET_ACCOUNT_ACCESS` - Send account access link/code
+- `NotificationTemplate::UPCOMING_CHARGE` - Send notification about upcoming charge
+
+Note: Both templates are supported in API versions 2021-01 and 2021-11.
+
 ### Discounts
 
 ```php

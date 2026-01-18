@@ -162,4 +162,53 @@ class Customers extends AbstractResource
 
         return $response['credit_summary'] ?? [];
     }
+
+    /**
+     * Send a notification to a customer
+     *
+     * Sends an email notification to a customer using a configured template.
+     * Supported templates: "get_account_access" and "upcoming_charge".
+     * Template variables can be provided via template_vars array if required by the template.
+     *
+     * @param int $customerId Customer ID
+     * @param string|\Recharge\Enums\NotificationTemplate $template Notification template name
+     * @param array<string, mixed> $templateVars Optional template variables (if template requires them)
+     * @return array<string, mixed> Response data
+     * @throws \Recharge\Exceptions\RechargeException
+     * @throws \InvalidArgumentException If template value is invalid
+     * @see https://developer.rechargepayments.com/2021-11/customers#send-a-notification
+     * @see https://developer.rechargepayments.com/2021-01/customers#send-a-notification
+     */
+    public function sendNotification(int $customerId, string|\Recharge\Enums\NotificationTemplate $template, array $templateVars = []): array
+    {
+        // Convert enum to string if provided
+        if ($template instanceof \Recharge\Enums\NotificationTemplate) {
+            $template = $template->value;
+        }
+
+        // Validate template string if provided
+        if (is_string($template)) {
+            if (\Recharge\Enums\NotificationTemplate::tryFromString($template) === null) {
+                throw new \InvalidArgumentException(
+                    sprintf(
+                        'Invalid notification template "%s". Supported templates: %s',
+                        $template,
+                        implode(', ', array_column(\Recharge\Enums\NotificationTemplate::cases(), 'value'))
+                    )
+                );
+            }
+        }
+
+        $data = ['template' => $template];
+        if (!empty($templateVars)) {
+            $data['template_vars'] = $templateVars;
+        }
+
+        $response = $this->client->post(
+            $this->buildEndpoint("{$customerId}/notifications"),
+            $data
+        );
+
+        return $response;
+    }
 }
