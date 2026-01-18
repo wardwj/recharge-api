@@ -8,6 +8,7 @@ use PHPUnit\Framework\TestCase;
 use Recharge\Data\Address;
 use Recharge\Data\Bundle;
 use Recharge\Data\Charge;
+use Recharge\Data\Checkout;
 use Recharge\Data\Customer;
 use Recharge\Data\Discount;
 use Recharge\Data\Order;
@@ -488,5 +489,67 @@ class DTOTest extends TestCase
         $this->assertNull($bundle->externalProductId);
         $this->assertNull($bundle->externalVariantId);
         $this->assertNull($bundle->items);
+    }
+
+    // Checkout Tests
+    public function testCheckoutParsesBasicResponse(): void
+    {
+        $data = [
+            'token' => 'checkout_token_123',
+            'email' => 'customer@example.com',
+            'currency' => 'USD',
+            'line_items' => [
+                [
+                    'id' => 1,
+                    'quantity' => 2,
+                ],
+            ],
+            'billing_address' => [
+                'first_name' => 'John',
+                'last_name' => 'Doe',
+            ],
+            'created_at' => '2024-01-01T00:00:00Z',
+            'updated_at' => '2024-01-01T00:00:00Z',
+        ];
+
+        $checkout = Checkout::fromArray($data);
+
+        $this->assertEquals('checkout_token_123', $checkout->token);
+        $this->assertEquals('customer@example.com', $checkout->email);
+        $this->assertEquals('USD', $checkout->currency);
+        $this->assertIsArray($checkout->lineItems);
+        $this->assertIsArray($checkout->billingAddress);
+        $this->assertNotNull($checkout->createdAt);
+        $this->assertNotNull($checkout->updatedAt);
+    }
+
+    public function testCheckoutHandlesNullFields(): void
+    {
+        $data = [
+            'token' => 'checkout_token_456',
+        ];
+
+        $checkout = Checkout::fromArray($data);
+
+        $this->assertEquals('checkout_token_456', $checkout->token);
+        $this->assertNull($checkout->email);
+        $this->assertNull($checkout->lineItems);
+        $this->assertNull($checkout->billingAddress);
+        $this->assertNull($checkout->chargeId);
+    }
+
+    public function testCheckoutParsesAfterProcessing(): void
+    {
+        $data = [
+            'token' => 'checkout_token_789',
+            'charge_id' => 12345,
+            'completed_at' => '2024-01-01T12:00:00Z',
+        ];
+
+        $checkout = Checkout::fromArray($data);
+
+        $this->assertEquals('checkout_token_789', $checkout->token);
+        $this->assertEquals(12345, $checkout->chargeId);
+        $this->assertNotNull($checkout->completedAt);
     }
 }

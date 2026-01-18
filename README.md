@@ -303,6 +303,60 @@ $client->charges()->addFreeGift(123, ['external_variant_id' => ['ecommerce' => '
 $client->charges()->removeFreeGift(123, ['external_variant_id' => ['ecommerce' => 'shopify', 'variant_id' => '456']]);
 ```
 
+### Checkouts
+
+```php
+// Note: Checkouts are only available for BigCommerce and Custom setups.
+// Not supported for Shopify stores (deprecated as of October 18, 2024).
+// Requires Pro or Custom plan.
+
+// Create a checkout
+$checkout = $client->checkouts()->create([
+    'email' => 'customer@example.com',
+    'line_items' => [
+        [
+            'external_product_id' => ['ecommerce' => 'bigcommerce', 'product_id' => '123'],
+            'external_variant_id' => ['ecommerce' => 'bigcommerce', 'variant_id' => '456'],
+            'quantity' => 2,
+        ],
+    ],
+    'billing_address' => [
+        'first_name' => 'John',
+        'last_name' => 'Doe',
+        'address1' => '123 Main St',
+        'city' => 'New York',
+        'province' => 'NY',
+        'zip' => '10001',
+        'country' => 'United States',
+        'country_code' => 'US',
+    ],
+]);
+
+// Get a checkout
+$checkout = $client->checkouts()->get('checkout_token_123');
+
+// Update a checkout
+$checkout = $client->checkouts()->update('checkout_token_123', [
+    'shipping_address' => [
+        'first_name' => 'Jane',
+        'last_name' => 'Doe',
+        'address1' => '456 Oak Ave',
+    ],
+]);
+
+// Get shipping rates
+$shippingRates = $client->checkouts()->getShippingRates('checkout_token_123');
+
+// Process/charge a checkout
+$checkout = $client->checkouts()->charge('checkout_token_123', [
+    'payment_method' => [
+        'type' => 'credit_card',
+        'gateway' => 'stripe',
+    ],
+]);
+// After processing, $checkout->chargeId will be set
+```
+
 ## API Version
 
 ```php
@@ -326,6 +380,7 @@ $client->setApiVersion(ApiVersion::V2021_11);
 - `discounts()` - Manage discounts
 - `bundles()` - Manage bundles
 - `charges()` - Manage charges (with full CRUD and action methods)
+- `checkouts()` - Manage checkouts (BigCommerce/Custom only, requires Pro plan)
 - `orders()` - Manage orders
 - `products()` - List products
 - `store()` - Get store info

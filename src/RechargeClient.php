@@ -39,7 +39,7 @@ class RechargeClient implements ClientInterface, LoggerAwareInterface
     private RechargeConfig $config;
 
     /**
-     * @var array<string, Resources\AbstractResource|Resources\Customers|Resources\Subscriptions|Resources\Orders|Resources\Charges|Resources\Addresses|Resources\Products|Resources\Discounts|Resources\Bundles|Resources\Store> Cached resource instances
+     * @var array<string, Resources\AbstractResource|Resources\Customers|Resources\Subscriptions|Resources\Orders|Resources\Charges|Resources\Addresses|Resources\Products|Resources\Discounts|Resources\Bundles|Resources\Checkouts|Resources\Store> Cached resource instances
      */
     private array $resources = [];
 
@@ -302,6 +302,21 @@ class RechargeClient implements ClientInterface, LoggerAwareInterface
 
         /** @var Resources\Bundles */
         return $this->resources['bundles'];
+    }
+
+    /**
+     * Get Checkouts resource instance
+     *
+     * @return Resources\Checkouts Checkouts resource
+     */
+    public function checkouts(): Resources\Checkouts
+    {
+        if (!isset($this->resources['checkouts'])) {
+            $this->resources['checkouts'] = new Resources\Checkouts($this);
+        }
+
+        /** @var Resources\Checkouts */
+        return $this->resources['checkouts'];
     }
 
     /**
