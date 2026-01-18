@@ -39,7 +39,7 @@ class RechargeClient implements ClientInterface, LoggerAwareInterface
     private RechargeConfig $config;
 
     /**
-     * @var array<string, Resources\AbstractResource|Resources\Customers|Resources\Subscriptions|Resources\Orders|Resources\Charges|Resources\Addresses|Resources\Products|Resources\Discounts|Resources\Bundles|Resources\Checkouts|Resources\Collections|Resources\Credits|Resources\Metafields|Resources\OneTimes|Resources\PaymentMethods|Resources\Store> Cached resource instances
+     * @var array<string, Resources\AbstractResource|Resources\Customers|Resources\Subscriptions|Resources\Orders|Resources\Charges|Resources\Addresses|Resources\Products|Resources\Discounts|Resources\Bundles|Resources\Checkouts|Resources\Collections|Resources\Credits|Resources\Metafields|Resources\OneTimes|Resources\PaymentMethods|Resources\Plans|Resources\Store> Cached resource instances
      */
     private array $resources = [];
 
@@ -392,6 +392,21 @@ class RechargeClient implements ClientInterface, LoggerAwareInterface
 
         /** @var Resources\PaymentMethods */
         return $this->resources['payment_methods'];
+    }
+
+    /**
+     * Get Plans resource instance
+     *
+     * @return Resources\Plans Plans resource
+     */
+    public function plans(): Resources\Plans
+    {
+        if (!isset($this->resources['plans'])) {
+            $this->resources['plans'] = new Resources\Plans($this);
+        }
+
+        /** @var Resources\Plans */
+        return $this->resources['plans'];
     }
 
     /**

@@ -12,6 +12,7 @@ use Recharge\Enums\Sort\MetafieldSort;
 use Recharge\Enums\Sort\OneTimeSort;
 use Recharge\Enums\Sort\OrderSort;
 use Recharge\Enums\Sort\PaymentMethodSort;
+use Recharge\Enums\Sort\PlanSort;
 use Recharge\Enums\Sort\ProductSort;
 use Recharge\Enums\Sort\SubscriptionSort;
 
@@ -213,5 +214,26 @@ class EnumSortTest extends TestCase
         $this->assertEquals(PaymentMethodSort::CREATED_AT_ASC, PaymentMethodSort::tryFromString('created_at-asc'));
         $this->assertEquals(PaymentMethodSort::UPDATED_AT_DESC, PaymentMethodSort::tryFromString('updated_at-desc'));
         $this->assertNull(PaymentMethodSort::tryFromString('invalid-sort'));
+    }
+
+    public function testPlanSortEnum(): void
+    {
+        $this->assertEquals('id-desc', PlanSort::ID_DESC->value);
+        $this->assertEquals('created_at-asc', PlanSort::CREATED_AT_ASC->value);
+        $this->assertEquals('updated_at-desc', PlanSort::UPDATED_AT_DESC->value);
+    }
+
+    public function testPlanSortDefault(): void
+    {
+        $default = PlanSort::default();
+        $this->assertEquals(PlanSort::ID_DESC, $default);
+    }
+
+    public function testPlanSortTryFromString(): void
+    {
+        $this->assertEquals(PlanSort::ID_DESC, PlanSort::tryFromString('id-desc'));
+        $this->assertEquals(PlanSort::CREATED_AT_ASC, PlanSort::tryFromString('created_at-asc'));
+        $this->assertEquals(PlanSort::UPDATED_AT_DESC, PlanSort::tryFromString('updated_at-desc'));
+        $this->assertNull(PlanSort::tryFromString('invalid-sort'));
     }
 }

@@ -17,6 +17,7 @@ use Recharge\Data\Metafield;
 use Recharge\Data\OneTime;
 use Recharge\Data\Order;
 use Recharge\Data\PaymentMethod;
+use Recharge\Data\Plan;
 use Recharge\Data\Product;
 use Recharge\Data\Subscription;
 use Recharge\Enums\AppliesToProductType;
@@ -28,6 +29,7 @@ use Recharge\Enums\DiscountType;
 use Recharge\Enums\OrderStatus;
 use Recharge\Enums\PaymentMethodStatus;
 use Recharge\Enums\PaymentType;
+use Recharge\Enums\PlanType;
 use Recharge\Enums\ProcessorName;
 use Recharge\Enums\SubscriptionStatus;
 
@@ -1161,5 +1163,111 @@ class DTOTest extends TestCase
         $this->assertEquals('stripe', $array['processor_name']);
         $this->assertEquals('cus_abc123', $array['processor_customer_token']);
         $this->assertEquals('valid', $array['status']);
+    }
+
+    // Plan Tests
+    public function testPlanParsesBasicResponse(): void
+    {
+        $data = [
+            'id' => 1,
+            'type' => 'subscription',
+            'title' => 'Monthly Plan',
+            'external_product_id' => ['ecommerce' => 'shopify', 'product_id' => '123'],
+            'external_variant_ids' => ['var_1', 'var_2'],
+            'has_variant_restrictions' => true,
+            'subscription_preferences' => [
+                'charge_interval_frequency' => 1,
+                'interval_unit' => 'month',
+                'order_interval_frequency' => 1,
+            ],
+            'discount_amount' => '10.00',
+            'discount_type' => 'percentage',
+            'sort_order' => 1,
+            'channel_settings' => [
+                'api' => true,
+                'checkout' => true,
+            ],
+            'created_at' => '2024-01-01T00:00:00Z',
+            'updated_at' => '2024-01-01T00:00:00Z',
+        ];
+
+        $plan = Plan::fromArray($data);
+
+        $this->assertEquals(1, $plan->id);
+        $this->assertEquals(PlanType::SUBSCRIPTION, $plan->type);
+        $this->assertEquals('Monthly Plan', $plan->title);
+        $this->assertIsArray($plan->externalProductId);
+        $this->assertIsArray($plan->externalVariantIds);
+        $this->assertTrue($plan->hasVariantRestrictions);
+        $this->assertIsArray($plan->subscriptionPreferences);
+        $this->assertEquals('10.00', $plan->discountAmount);
+        $this->assertEquals('percentage', $plan->discountType);
+        $this->assertEquals(1, $plan->sortOrder);
+        $this->assertIsArray($plan->channelSettings);
+        $this->assertNotNull($plan->createdAt);
+        $this->assertNotNull($plan->updatedAt);
+    }
+
+    public function testPlanHandlesNullFields(): void
+    {
+        $data = [
+            'id' => 2,
+        ];
+
+        $plan = Plan::fromArray($data);
+
+        $this->assertEquals(2, $plan->id);
+        $this->assertNull($plan->type);
+        $this->assertNull($plan->title);
+        $this->assertNull($plan->externalProductId);
+        $this->assertNull($plan->subscriptionPreferences);
+        $this->assertNull($plan->discountAmount);
+    }
+
+    public function testPlanHelperMethods(): void
+    {
+        $plan = new Plan(
+            id: 1,
+            type: PlanType::SUBSCRIPTION,
+            subscriptionPreferences: [
+                'charge_interval_frequency' => 1,
+                'order_interval_frequency' => 2,
+            ]
+        );
+
+        $this->assertFalse($plan->isDeleted());
+        $this->assertEquals(1, $plan->getChargeIntervalFrequency());
+        $this->assertEquals(2, $plan->getOrderIntervalFrequency());
+    }
+
+    public function testPlanIsDeleted(): void
+    {
+        $plan = new Plan(
+            id: 1,
+            deletedAt: \Carbon\CarbonImmutable::now()
+        );
+
+        $this->assertTrue($plan->isDeleted());
+    }
+
+    public function testPlanToArray(): void
+    {
+        $plan = new Plan(
+            id: 1,
+            type: PlanType::SUBSCRIPTION,
+            title: 'Monthly Plan',
+            discountAmount: '10.00',
+            discountType: 'percentage',
+            sortOrder: 1
+        );
+
+        $array = $plan->toArray();
+
+        $this->assertEquals(1, $array['id']);
+        $this->assertEquals('subscription', $array['type']);
+        $this->assertEquals('Monthly Plan', $array['title']);
+        $this->assertEquals('10.00', $array['discount_amount']);
+        $this->assertEquals('percentage', $array['discount_type']);
+        $this->assertEquals(1, $array['sort_order']);
     }
 }

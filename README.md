@@ -80,6 +80,7 @@ The SDK supports sorting for list operations using type-safe enums or strings. U
 - `OneTimeSort` - For one-times
 - `ProductSort` - For products
 - `PaymentMethodSort` - For payment methods
+- `PlanSort` - For plans (2021-11 only)
 
 **Subscriptions (`SubscriptionSort`):**
 - `SubscriptionSort::ID_ASC`, `SubscriptionSort::ID_DESC` (default)
@@ -133,6 +134,12 @@ The SDK supports sorting for list operations using type-safe enums or strings. U
 - `PaymentMethodSort::ID_ASC`, `PaymentMethodSort::ID_DESC` (default)
 - `PaymentMethodSort::CREATED_AT_ASC`, `PaymentMethodSort::CREATED_AT_DESC`
 - `PaymentMethodSort::UPDATED_AT_ASC`, `PaymentMethodSort::UPDATED_AT_DESC`
+
+**Plans (`PlanSort`):**
+- `PlanSort::ID_ASC`, `PlanSort::ID_DESC` (default)
+- `PlanSort::CREATED_AT_ASC`, `PlanSort::CREATED_AT_DESC`
+- `PlanSort::UPDATED_AT_ASC`, `PlanSort::UPDATED_AT_DESC`
+- Note: Plans are only available in API version 2021-11. The SDK automatically switches to 2021-11 when needed.
 
 ```php
 use Recharge\Enums\Sort\SubscriptionSort;
@@ -817,6 +824,7 @@ $client->setApiVersion(ApiVersion::V2021_11);
 - `oneTimes()` - Manage one-time purchases
 - `orders()` - Manage orders
 - `paymentMethods()` - Manage payment methods (2021-11, requires specific scopes)
+- `plans()` - Manage plans (2021-11 only, replaces deprecated products plan operations)
 - `products()` - Manage products (with sorting support)
 - `store()` - Get store info
 
